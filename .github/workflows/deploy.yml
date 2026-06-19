@@ -12,10 +12,11 @@ permissions:
   pages: write
   id-token: write
 
-# Evita despliegues simultáneos; cancela los antiguos en curso
+# Evita despliegues simultáneos; encola nuevos en lugar de cancelar
+# cancel-in-progress: false previene el error de artefactos duplicados
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
