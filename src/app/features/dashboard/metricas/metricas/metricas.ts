@@ -3,7 +3,7 @@ import { MetricsMockService } from '../../../../core/services/metrics.mock.servi
 import { BusinessStore } from '../../business/business.store';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
 import { DailyMetric, Metrics } from '../../../../core/models/metrics.model';
-import { Business } from '../../../../core/models/business.model';
+import { Business } from '../../../../domain/business/business.entity';
 
 @Component({
   selector: 'app-metricas',

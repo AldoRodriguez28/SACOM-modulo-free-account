@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Business, BusinessStatus } from '../../../../core/models/business.model';
+import { Business, BusinessStatus } from '../../../../domain/business/business.entity';
 import { Metrics } from '../../../../core/models/metrics.model';
 import { MAX_PUBLISHED as MAX_PUBLISHED_LIMIT } from '../../../../domain/business/business.policies';
 

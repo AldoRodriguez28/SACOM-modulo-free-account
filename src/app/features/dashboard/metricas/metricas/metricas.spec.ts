@@ -5,7 +5,7 @@ import { Metricas } from './metricas';
 import { MetricsMockService } from '../../../../core/services/metrics.mock.service';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
 import { BUSINESS_REPOSITORY } from '../../../../data/business/business.repository';
-import { Business } from '../../../../core/models/business.model';
+import { Business } from '../../../../domain/business/business.entity';
 
 const STUB_BIZ: Business = {
   id: 'b1', userId: 'u1', status: 'published',
