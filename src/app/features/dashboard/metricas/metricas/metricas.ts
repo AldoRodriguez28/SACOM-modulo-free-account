@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MetricsMockService } from '../../../../core/services/metrics.mock.service';
-import { BusinessMockService } from '../../../../core/services/business.mock.service';
+import { BusinessStore } from '../../business/business.store';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
 import { DailyMetric, Metrics } from '../../../../core/models/metrics.model';
 import { Business } from '../../../../core/models/business.model';
@@ -49,7 +49,7 @@ export class Metricas implements OnInit {
 
   constructor(
     private metricsService: MetricsMockService,
-    private businessService: BusinessMockService,
+    private businessService: BusinessStore,
     private auth: AuthMockService
   ) {}
 

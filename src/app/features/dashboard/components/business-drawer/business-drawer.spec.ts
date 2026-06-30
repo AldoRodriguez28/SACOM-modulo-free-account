@@ -2,7 +2,17 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GoogleMapsModule } from '@angular/google-maps';
+import { of } from 'rxjs';
+import { BUSINESS_REPOSITORY } from '../../../../data/business/business.repository';
 import { BusinessDrawer } from './business-drawer';
+
+const mockRepo = {
+  getAll: () => of([]),
+  create: (_: any) => of({} as any),
+  update: (_id: string, data: any) => of(data as any),
+  remove: (_: string) => of(undefined as void),
+  uploadLogo: (_: File) => of('')
+};
 
 describe('BusinessDrawer', () => {
   let component: BusinessDrawer;
@@ -12,7 +22,8 @@ describe('BusinessDrawer', () => {
     await TestBed.configureTestingModule({
       declarations: [BusinessDrawer],
       imports: [ReactiveFormsModule, GoogleMapsModule],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
+      providers: [{ provide: BUSINESS_REPOSITORY, useValue: mockRepo }]
     })
     .compileComponents();
 
