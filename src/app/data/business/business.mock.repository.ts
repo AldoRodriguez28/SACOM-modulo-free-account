@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { Business, BusinessStatus } from '../../domain/business/business.entity';
 import { BusinessRepository, CreateBusinessData } from './business.repository';
 import mockData from '../../../assets/mock-data.json';
@@ -26,7 +26,12 @@ export class BusinessMockRepository implements BusinessRepository {
   }
 
   update(id: string, data: Partial<Business>): Observable<Business> {
-    const list = this.load().map(b => (b.id === id ? { ...b, ...data } : b));
+    const current = this.load();
+    const exists = current.some(b => b.id === id);
+    if (!exists) {
+      return throwError(() => new Error(`Business not found: ${id}`));
+    }
+    const list = current.map(b => (b.id === id ? { ...b, ...data } : b));
     this.persist(list);
     return of(list.find(b => b.id === id)!);
   }

@@ -39,6 +39,15 @@ describe('BusinessMockRepository', () => {
     expect(all.find(b => b.id === created.id)?.businessName).toBe('B');
   });
 
+  it('update emite error cuando el id no existe', async () => {
+    try {
+      await firstValueFrom(repo.update('id-inexistente', { businessName: 'X' }));
+      fail('Debería haber lanzado un error');
+    } catch (err: unknown) {
+      expect((err as Error).message).toContain('Business not found: id-inexistente');
+    }
+  });
+
   it('remove elimina por id', async () => {
     const created = await firstValueFrom(repo.create({
       businessName: 'A', contactName: '', contactEmail: '', contactPhone: '',
