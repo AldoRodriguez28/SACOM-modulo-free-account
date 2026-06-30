@@ -5,7 +5,6 @@ import { Dashboard } from './dashboard';
 import { AuthMockService } from '../../../core/services/auth.mock.service';
 import { Header } from '../components/header/header';
 import { NavLateral } from '../components/nav-lateral/nav-lateral';
-import { NavInferior } from '../components/nav-inferior/nav-inferior';
 
 describe('Dashboard', () => {
   let component: Dashboard;
@@ -13,7 +12,7 @@ describe('Dashboard', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [Dashboard, Header, NavLateral, NavInferior],
+      declarations: [Dashboard, Header, NavLateral],
       imports: [RouterTestingModule],
       providers: [AuthMockService]
     })

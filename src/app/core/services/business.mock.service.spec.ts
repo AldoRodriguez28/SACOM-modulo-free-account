@@ -9,7 +9,8 @@ const mockBiz = (): Omit<Business, 'id' | 'userId'> => ({
   products: 'test', logoUrl: '',
   address: { fullAddress: '', street: '', exteriorNumber: '', colony: '',
     postalCode: '', city: '', state: '', lat: 0, lng: 0 },
-  hours: { allDay: true, weekdays: null, saturday: null, sunday: null }
+  hours: { allDay: true, weekdays: null, saturday: null, sunday: null },
+  status: 'in_progress', createdAt: '2026-01-01', draft: null
 });
 
 describe('BusinessMockService', () => {
