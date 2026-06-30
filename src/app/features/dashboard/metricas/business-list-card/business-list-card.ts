@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Business, BusinessStatus } from '../../../../core/models/business.model';
 import { Metrics } from '../../../../core/models/metrics.model';
+import { MAX_PUBLISHED as MAX_PUBLISHED_LIMIT } from '../../../../domain/business/business.policies';
 
 @Component({
   selector: 'app-business-list-card',
@@ -15,7 +16,7 @@ export class BusinessListCard {
   @Output() businessSelected = new EventEmitter<Business>();
   @Output() addRequested = new EventEmitter<void>();
 
-  readonly MAX_PUBLISHED = 3;
+  readonly MAX_PUBLISHED = MAX_PUBLISHED_LIMIT;
 
   statusLabel(status: BusinessStatus): string {
     return { published: 'Publicado', unpublished: 'No publicado', in_progress: 'En progreso' }[status] ?? status;
