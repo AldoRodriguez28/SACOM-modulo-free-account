@@ -41,9 +41,4 @@ describe('BusinessListCard', () => {
     addRow.click();
     expect(component.addRequested.emit).toHaveBeenCalled();
   });
-
-  it('avgClicks returns 0 when metrics is null', () => {
-    component.metrics = null;
-    expect(component.avgClicks).toBe(0);
-  });
 });

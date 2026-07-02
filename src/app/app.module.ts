@@ -4,6 +4,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { BUSINESS_REPOSITORY } from './data/business/business.repository';
+import { BusinessMockRepository } from './data/business/business.mock.repository';
 
 @NgModule({
   declarations: [
@@ -14,7 +16,9 @@ import { AppComponent } from './app.component';
     BrowserAnimationsModule,
     AppRoutingModule
   ],
-  providers: [],
+  providers: [
+    { provide: BUSINESS_REPOSITORY, useClass: BusinessMockRepository }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

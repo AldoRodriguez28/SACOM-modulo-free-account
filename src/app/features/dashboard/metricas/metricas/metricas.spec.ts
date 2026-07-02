@@ -1,9 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { of } from 'rxjs';
 import { Metricas } from './metricas';
 import { MetricsMockService } from '../../../../core/services/metrics.mock.service';
-import { BusinessMockService } from '../../../../core/services/business.mock.service';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
+import { BUSINESS_REPOSITORY } from '../../../../data/business/business.repository';
+import { Business } from '../../../../domain/business/business.entity';
+
+const STUB_BIZ: Business = {
+  id: 'b1', userId: 'u1', status: 'published',
+  businessName: 'Test', contactName: 'User', contactEmail: 'u@t.com', contactPhone: '0000000000',
+  categoryCode: 1, category: 'Test', website: '', publicPhone: '0000000000', products: '',
+  logoUrl: '', createdAt: new Date().toISOString(), draft: null,
+  address: { fullAddress: '', street: '', exteriorNumber: '', colony: '', postalCode: '', city: '', state: '', lat: 19, lng: -99 },
+  hours: { allDay: true, weekdays: null, saturday: null, sunday: null }
+};
+
+const mockRepo = {
+  getAll: () => of([STUB_BIZ]),
+  create: (_: any) => of({} as any),
+  update: (_id: string, data: any) => of(data as any),
+  remove: (_: string) => of(undefined as void),
+  uploadLogo: (_: File) => of('')
+};
 
 describe('Metricas', () => {
   let component: Metricas;
@@ -15,8 +34,8 @@ describe('Metricas', () => {
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         MetricsMockService,
-        BusinessMockService,
-        AuthMockService
+        AuthMockService,
+        { provide: BUSINESS_REPOSITORY, useValue: mockRepo }
       ]
     })
     .compileComponents();

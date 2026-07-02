@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, NgZone, OnChanges, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Business, BusinessAddress, BusinessStatus } from '../../../../core/models/business.model';
-import { BusinessMockService, StatusTransitionResult } from '../../../../core/services/business.mock.service';
+import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
+import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
@@ -94,7 +94,7 @@ export class BusinessDrawer implements OnChanges {
 
   constructor(
     private fb: FormBuilder,
-    private businessService: BusinessMockService,
+    private businessService: BusinessStore,
     private ngZone: NgZone
   ) {}
 
