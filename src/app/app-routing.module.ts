@@ -14,6 +14,11 @@ const routes: Routes = [
       import('./features/login/login-module').then(m => m.LoginModule)
   },
   {
+    path: 'validacion',
+    loadChildren: () =>
+      import('./features/login/login-module').then(m => m.LoginModule)
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadChildren: () =>

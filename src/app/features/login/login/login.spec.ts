@@ -4,6 +4,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 
 import { Login } from './login';
 import { AuthMockService } from '../../../core/services/auth.mock.service';
+import { AUTH_API } from '../../../core/services/auth-api';
+import { AuthApiMock } from '../../../core/services/auth-api-mock';
 
 describe('Login', () => {
   let component: Login;
@@ -13,7 +15,10 @@ describe('Login', () => {
     await TestBed.configureTestingModule({
       declarations: [Login],
       imports: [ReactiveFormsModule, RouterTestingModule],
-      providers: [AuthMockService]
+      providers: [
+        AuthMockService,
+        { provide: AUTH_API, useClass: AuthApiMock }
+      ]
     })
     .compileComponents();
 
