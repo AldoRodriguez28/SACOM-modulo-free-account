@@ -1,0 +1,35 @@
+name: CI/CD - Validación Entorno Feature
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+env:
+  IMAGE_NAME: sacom-free-account-front
+  CONTAINER_NAME: sacom-free-account-front
+
+jobs:
+  deploy-to-dev:
+    runs-on: self-hosted
+    steps:
+      - name: Descargar Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Construir Imagen Docker
+        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
+
+      - name: Detener y Eliminar Contenedor Anterior
+        run: |
+          docker rm -f ${{ env.CONTAINER_NAME }} || true
+
+      - name: Levantar Contenedor Nuevo
+        run: |
+          docker run -d --name ${{ env.CONTAINER_NAME }} \
+            --network red-interna \
+            -p 4200:80 \
+            --restart unless-stopped \
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Limpiar Imágenes Huérfanas
+        run: docker image prune -f
