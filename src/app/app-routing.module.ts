@@ -24,6 +24,16 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/dashboard/dashboard-module').then(m => m.DashboardModule)
   },
+  {
+    path: 'otp',
+    loadChildren: () =>
+      import('./features/otp/otp-module').then(m => m.OtpModule)
+  },
+  {
+    path: 'no-autorizado',
+    loadChildren: () =>
+      import('./features/no-autorizado/no-autorizado-module').then(m => m.NoAutorizadoModule)
+  },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];

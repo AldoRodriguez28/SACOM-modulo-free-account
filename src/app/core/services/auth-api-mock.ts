@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { delay, mergeMap } from 'rxjs/operators';
 import { AuthApi } from './auth-api';
 import { AuthResponse, SystemInfo } from '../models/auth-response.model';
 
@@ -39,6 +39,26 @@ export class AuthApiMock implements AuthApi {
 
     // Simula latencia de red.
     return of(response).pipe(delay(400));
+  }
+
+  /**
+   * Simula el endpoint /Auth/otp/callback.
+   * - code vacío o que contenga "error"/"invalid"/"fail" => error 401 (OTP inválido).
+   * - cualquier otro code => 200 con sesión simulada.
+   */
+  validateOtp(code: string): Observable<AuthResponse> {
+    const invalido = !code || /error|invalid|fail/i.test(code);
+
+    if (invalido) {
+      return timer(400).pipe(
+        mergeMap(() => throwError(() => ({ status: 401, message: 'OTP inválido' })))
+      );
+    }
+
+    return of<AuthResponse>({
+      token: 'mock-session-token',
+      user: { id: 'usr-001', email: this.DEMO.systemInfo!.email }
+    }).pipe(delay(400));
   }
 
   /** Decodifica el payload de un JWT sin verificar la firma. */
