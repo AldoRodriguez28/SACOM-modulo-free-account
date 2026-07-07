@@ -1,57 +1,34 @@
-name: Deploy to GitHub Pages
+name: CI/CD - Validación Entorno Feature (DEVELOPE140)
 
 on:
   push:
-    branches: [main]
-  # Permite ejecutarlo manualmente desde la pestaña Actions
-  workflow_dispatch:
+    branches: [feature]
 
-# Permisos necesarios para publicar en GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Evita despliegues simultáneos; encola nuevos en lugar de cancelar
-# cancel-in-progress: false previene el error de artefactos duplicados
-concurrency:
-  group: pages
-  cancel-in-progress: false
+env:
+  IMAGE_NAME: sacom-ui-test
+  CONTAINER_NAME: sacom-ui
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  deploy-to-dev:
+    runs-on: [self-hosted, Windows, X64]
     steps:
-      - name: Checkout
+      - name: Descargar Código Fuente
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - name: Construir Imagen Docker (Linux vía WSL)
+        run: wsl -d Ubuntu docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Detener y Eliminar Contenedor Anterior
+        run: wsl -d Ubuntu docker rm -f ${{ env.CONTAINER_NAME }}
+        continue-on-error: true
 
-      - name: Build (producción)
-        run: npm run build -- --configuration production --base-href /SACOM-modulo-free-account/
+      - name: Levantar Contenedor Nuevo
+        run: >
+          wsl -d Ubuntu docker run -d --name ${{ env.CONTAINER_NAME }}
+          --network red-interna
+          -p 8080:80
+          --restart unless-stopped
+          ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: SPA fallback (404.html para rutas de Angular)
-        run: cp dist/sacom-free-account/browser/index.html dist/sacom-free-account/browser/404.html
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/sacom-free-account/browser
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Limpiar Imágenes Huérfanas
+        run: wsl -d Ubuntu docker image prune -f
