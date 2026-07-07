@@ -12,7 +12,7 @@ COPY . .
 RUN npx ng build --configuration production
 
 FROM nginx:alpine
-COPY --from=build /app/dist/sacom-free-account/browser /usr/share/nginx/html/
+COPY --from=build /app/dist/sacom-free-account/browser /usr/share/nginx/html/mis-negocios/
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
