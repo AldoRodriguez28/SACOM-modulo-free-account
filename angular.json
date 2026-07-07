@@ -27,6 +27,7 @@
             "outputPath": "dist/sacom-free-account",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "baseHref": "/mis-negocios/",
             "polyfills": [
               "zone.js"
             ],

@@ -1,0 +1,74 @@
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+.no-autorizado {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #FFFBEB 0%, $color-bg 55%);
+  @include flex-center;
+  padding: $spacing-md;
+
+  &__card {
+    background: $color-white;
+    border-radius: $radius-xl;
+    padding: 40px $spacing-xl;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+    text-align: center;
+  }
+
+  &__logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__logo {
+    height: 28px;
+    width: auto;
+    display: block;
+  }
+
+  &__icon {
+    @include flex-center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto $spacing-lg;
+    border-radius: $radius-full;
+    background: $color-primary-tint;
+    color: $color-primary-dark;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: $font-weight-black;
+    color: $color-text;
+    margin-bottom: $spacing-sm;
+  }
+
+  &__text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: $color-text-muted;
+    margin-bottom: $spacing-xl;
+  }
+
+  &__btn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    border-radius: $radius-full;
+    border: none;
+    background-color: $color-text;
+    color: $color-white;
+    font-weight: $font-weight-bold;
+    font-size: 13px;
+    font-family: $font-family;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover { background-color: $color-btn-primary-hover; }
+  }
+}
