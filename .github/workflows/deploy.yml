@@ -5,8 +5,8 @@ on:
     branches: [feature]
 
 env:
-  IMAGE_NAME: sacom-free-account-front
-  CONTAINER_NAME: sacom-free-account-front
+  IMAGE_NAME: sacom-ui-test
+  CONTAINER_NAME: sacom-ui
 
 jobs:
   deploy-to-dev:
@@ -15,20 +15,20 @@ jobs:
       - name: Descargar Código Fuente
         uses: actions/checkout@v4
 
-      - name: Construir Imagen Docker
-        run: docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
+      - name: Construir Imagen Docker (Linux vía WSL)
+        run: wsl -d Ubuntu docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
 
       - name: Detener y Eliminar Contenedor Anterior
-        run: docker rm -f ${{ env.CONTAINER_NAME }}
+        run: wsl -d Ubuntu docker rm -f ${{ env.CONTAINER_NAME }}
         continue-on-error: true
 
       - name: Levantar Contenedor Nuevo
         run: >
-          docker run -d --name ${{ env.CONTAINER_NAME }}
+          wsl -d Ubuntu docker run -d --name ${{ env.CONTAINER_NAME }}
           --network red-interna
-          -p 4200:80
+          -p 8080:80
           --restart unless-stopped
           ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Limpiar Imágenes Huérfanas
-        run: docker image prune -f
+        run: wsl -d Ubuntu docker image prune -f
