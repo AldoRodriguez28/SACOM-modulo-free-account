@@ -8,7 +8,7 @@ import { AppComponent } from './app.component';
 import { BUSINESS_REPOSITORY } from './data/business/business.repository';
 import { BusinessMockRepository } from './data/business/business.mock.repository';
 import { AUTH_API } from './core/services/auth-api';
-import { AuthApiMock } from './core/services/auth-api-mock';
+import { AuthApiHttp } from './core/services/auth-api-http';
 
 @NgModule({
   declarations: [
@@ -22,9 +22,8 @@ import { AuthApiMock } from './core/services/auth-api-mock';
   providers: [
     provideHttpClient(withInterceptorsFromDi()),
     { provide: BUSINESS_REPOSITORY, useClass: BusinessMockRepository },
-    // Mientras la API real no esté disponible se usa el mock.
-    // Para conectar el backend real: reemplazar AuthApiMock por AuthApiHttp.
-    { provide: AUTH_API, useClass: AuthApiMock }
+    // Para volver al mock: reemplazar AuthApiHttp por AuthApiMock.
+    { provide: AUTH_API, useClass: AuthApiHttp }
   ],
   bootstrap: [AppComponent]
 })
