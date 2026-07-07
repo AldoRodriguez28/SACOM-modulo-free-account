@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { User } from '../models/user.model';
+import { AuthResponse } from '../models/auth-response.model';
 
 export const DEMO_USER: User = {
   id: 'usr-001',
@@ -13,6 +14,7 @@ export const DEMO_USER: User = {
 @Injectable({ providedIn: 'root' })
 export class AuthMockService {
   private readonly KEY = 'sa_user';
+  private readonly TOKEN_KEY = 'sa_token';
 
   currentUser = signal<User | null>(this.load());
 
@@ -51,8 +53,29 @@ export class AuthMockService {
     return this.loginOtp(email);
   }
 
+  /** Persiste la sesión a partir de la respuesta del login por token */
+  setSession(res: AuthResponse): void {
+    if (res.token) {
+      sessionStorage.setItem(this.TOKEN_KEY, res.token);
+    }
+    const user: User = {
+      id: res.user?.id ?? crypto.randomUUID(),
+      email: res.user?.email ?? '',
+      contactName: res.user?.contactName ?? '',
+      phone: '',
+      password: ''
+    };
+    sessionStorage.setItem(this.KEY, JSON.stringify(user));
+    this.currentUser.set(user);
+  }
+
+  getToken(): string | null {
+    return sessionStorage.getItem(this.TOKEN_KEY);
+  }
+
   logout(): void {
     sessionStorage.removeItem(this.KEY);
+    sessionStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
   }
 }
