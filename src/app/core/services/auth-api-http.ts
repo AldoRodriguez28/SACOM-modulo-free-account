@@ -14,9 +14,17 @@ export class AuthApiHttp implements AuthApi {
 
   loginByToken(token: string): Observable<AuthResponse> {
     const url = `${environment.SHARED_MGMT_URI}/Token/${token}`;
+    const headers = new HttpHeaders({
+      Authorization: this.basicAuthHeader(),
+    });
     return this.http
-      .get<TokenValidationResponse>(url)
+      .get<TokenValidationResponse>(url, { headers })
       .pipe(map(raw => this.mapTokenResponse(raw)));
+  }
+
+  /** Construye el header Basic Auth con las credenciales del entorno. */
+  private basicAuthHeader(): string {
+    return 'Basic ' + btoa(`${environment.SHARED_MGMT_USER}:${environment.SHARED_MGMT_PASS}`);
   }
 
   validateOtp(code: string): Observable<AuthResponse> {

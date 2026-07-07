@@ -32,6 +32,9 @@ describe('AuthApiHttp', () => {
 
     const req = httpMock.expectOne(`${environment.SHARED_MGMT_URI}/Token/${token}`);
     expect(req.request.method).toBe('GET');
+    const expectedAuth =
+      'Basic ' + btoa(`${environment.SHARED_MGMT_USER}:${environment.SHARED_MGMT_PASS}`);
+    expect(req.request.headers.get('Authorization')).toBe(expectedAuth);
     req.flush({
       token,
       system_info: '{"email":"aldo@gmail.com","LeadId":566171}',
