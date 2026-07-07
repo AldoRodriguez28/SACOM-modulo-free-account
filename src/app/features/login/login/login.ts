@@ -7,6 +7,9 @@ import { AUTH_API, AuthApi } from '../../../core/services/auth-api';
 /** Clave de sessionStorage donde se guarda el leadid recibido en el token */
 export const LEAD_ID_KEY = 'sa_leadid';
 
+/** Clave de sessionStorage donde se guarda el user_name recibido en el token */
+export const USER_NAME_KEY = 'sa_user_name';
+
 @Component({
   selector: 'app-login',
   standalone: false,
@@ -54,6 +57,9 @@ export class Login implements OnInit {
         }
         if (res.leadId) {
           sessionStorage.setItem(LEAD_ID_KEY, res.leadId);
+        }
+        if (res.userName) {
+          sessionStorage.setItem(USER_NAME_KEY, res.userName);
         }
       },
       error: () => {
