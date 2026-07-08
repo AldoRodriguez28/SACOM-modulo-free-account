@@ -20,6 +20,19 @@ export interface AuthResponse {
   };
 }
 
+/** Parámetros para `GET {API_URI}/Auth/otp/url`. */
+export interface OtpUrlRequest {
+  email: string;
+  leadId: string;
+  origen: string;
+  redirectUri: string;
+}
+
+/** Respuesta de `GET {API_URI}/Auth/otp/url`: url de inicio del flujo OTP. */
+export interface OtpUrlResponse {
+  url: string;
+}
+
 /**
  * Respuesta cruda del endpoint `GET {SHARED_MGMT_URI}/Token/{token}`.
  * `system_info` es un string JSON que contiene `email` y `LeadId`.

@@ -1,6 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { AuthMockService, DEMO_USER } from '../../../core/services/auth.mock.service';
 import { AUTH_API, AuthApi } from '../../../core/services/auth-api';
 
@@ -27,6 +28,7 @@ export class Login implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private auth: AuthMockService,
+    private cdr: ChangeDetectorRef,
     @Inject(AUTH_API) private authApi: AuthApi
   ) {}
 
@@ -74,12 +76,35 @@ export class Login implements OnInit {
     this.form.setValue({ email: DEMO_USER.email });
   }
 
+  /**
+   * Con el correo ya en el input, pide al backend la URL de verificación OTP y
+   * navega imperativamente hacia ella. `window.location.href` no depende de la
+   * detección de cambios, por eso funciona aunque la app corra zoneless.
+   */
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
-    this.auth.loginOtp(this.email.value).subscribe(() => {
-      this.loading = false;
-      this.router.navigate(['/dashboard/metricas']);
-    });
+    const leadId = sessionStorage.getItem(LEAD_ID_KEY) ?? '';
+    this.authApi
+      .getOtpUrl({
+        email: this.email.value,
+        leadId,
+        origen: environment.OTP_ORIGEN,
+        redirectUri: this.buildRedirectUri(),
+      })
+      .subscribe({
+        next: ({ url }) => {
+          window.location.href = url;
+        },
+        error: () => {
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  /** redirectUri = base href de la app + 'otp/callback' (p.ej. .../mis-negocios/otp/callback). */
+  private buildRedirectUri(): string {
+    return document.baseURI + 'otp/callback';
   }
 }
