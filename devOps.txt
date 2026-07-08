@@ -1,4 +1,4 @@
 DevOps Trigger File for sa-sacom-mybusiness-ui
 This file is modified by DevOps to push changes to GitHub and trigger CI/CD pipelines without modifying the developers' source code.
 
-Trigger: Re-triggering pipeline to validate updated Teams development webhook URL.
+Trigger: Re-triggering pipeline for validation pass #3.
