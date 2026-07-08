@@ -1,4 +1,4 @@
 DevOps Trigger File for sa-sacom-mybusiness-ui
 This file is modified by DevOps to push changes to GitHub and trigger CI/CD pipelines without modifying the developers' source code.
 
-Trigger: Initial configuration of centralized Docker-based CI/CD pipeline on release branch with /mis-negocios/ routing fallback.
+Trigger: Re-triggering pipeline after resolving YAML parser indentation syntax errors.
