@@ -24,13 +24,14 @@ export class Callback implements OnInit {
 
   ngOnInit(): void {
     const code = this.route.snapshot.queryParamMap.get('code');
+    const state = this.route.snapshot.queryParamMap.get('state');
 
-    if (!code) {
+    if (!code || !state) {
       this.router.navigate(['/no-autorizado']);
       return;
     }
 
-    this.authApi.validateOtp(code).subscribe({
+    this.authApi.validateOtp(code, state).subscribe({
       next: (res) => {
         this.auth.setSession(res);
         this.router.navigate(['/dashboard/metricas']);

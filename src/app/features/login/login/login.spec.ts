@@ -7,7 +7,7 @@ import { Observable, of } from 'rxjs';
 import { Login, USER_NAME_KEY, LEAD_ID_KEY } from './login';
 import { AuthMockService } from '../../../core/services/auth.mock.service';
 import { AUTH_API, AuthApi } from '../../../core/services/auth-api';
-import { AuthResponse } from '../../../core/models/auth-response.model';
+import { AuthResponse, OtpUrlResponse } from '../../../core/models/auth-response.model';
 
 describe('Login', () => {
   let component: Login;
@@ -78,5 +78,8 @@ class AuthApiMockStub implements AuthApi {
   }
   validateOtp(): Observable<AuthResponse> {
     return of<AuthResponse>({ token: 'sess' });
+  }
+  getOtpUrl(): Observable<OtpUrlResponse> {
+    return of<OtpUrlResponse>({ url: 'https://otp.example/start' });
   }
 }

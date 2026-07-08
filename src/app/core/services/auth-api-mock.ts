@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError, timer } from 'rxjs';
 import { delay, mergeMap } from 'rxjs/operators';
 import { AuthApi } from './auth-api';
-import { AuthResponse, SystemInfo } from '../models/auth-response.model';
+import { AuthResponse, OtpUrlRequest, OtpUrlResponse, SystemInfo } from '../models/auth-response.model';
 
 /**
  * Implementación mock de {@link AuthApi} mientras la API real no está disponible.
@@ -46,7 +46,7 @@ export class AuthApiMock implements AuthApi {
    * - code vacío o que contenga "error"/"invalid"/"fail" => error 401 (OTP inválido).
    * - cualquier otro code => 200 con sesión simulada.
    */
-  validateOtp(code: string): Observable<AuthResponse> {
+  validateOtp(code: string, _state: string): Observable<AuthResponse> {
     const invalido = !code || /error|invalid|fail/i.test(code);
 
     if (invalido) {
@@ -58,6 +58,13 @@ export class AuthApiMock implements AuthApi {
     return of<AuthResponse>({
       token: 'mock-session-token',
       user: { id: 'usr-001', email: this.DEMO.systemInfo!.email }
+    }).pipe(delay(400));
+  }
+
+  /** Simula el endpoint /Auth/otp/url devolviendo una url de OTP de demostración. */
+  getOtpUrl(_params: OtpUrlRequest): Observable<OtpUrlResponse> {
+    return of<OtpUrlResponse>({
+      url: 'https://test-otp.seccionamarilla.com.mx/otp/start?purpose=demo&clientid=demo&data=mock',
     }).pipe(delay(400));
   }
 

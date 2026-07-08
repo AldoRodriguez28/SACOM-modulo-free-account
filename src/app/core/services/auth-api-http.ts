@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthApi } from './auth-api';
-import { AuthResponse, TokenValidationResponse } from '../models/auth-response.model';
+import { AuthResponse, OtpUrlRequest, OtpUrlResponse, TokenValidationResponse } from '../models/auth-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiHttp implements AuthApi {
@@ -27,14 +27,22 @@ export class AuthApiHttp implements AuthApi {
     return 'Basic ' + btoa(`${environment.SHARED_MGMT_USER}:${environment.SHARED_MGMT_PASS}`);
   }
 
-  validateOtp(code: string): Observable<AuthResponse> {
+  validateOtp(code: string, state: string): Observable<AuthResponse> {
     const url = `${this.baseUrl}/Auth/otp/callback`;
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
+    const params = new HttpParams().set('code', code).set('state', state);
+    const headers = new HttpHeaders({ accept: '*/*' });
+    return this.http.get<AuthResponse>(url, { params, headers });
+  }
 
-    const body = { code };
-    return this.http.post<AuthResponse>(url, body, { headers });
+  getOtpUrl(params: OtpUrlRequest): Observable<OtpUrlResponse> {
+    const url = `${this.baseUrl}/Auth/otp/url`;
+    const httpParams = new HttpParams()
+      .set('email', params.email)
+      .set('leadId', params.leadId)
+      .set('origen', params.origen)
+      .set('redirectUri', params.redirectUri);
+    const headers = new HttpHeaders({ accept: '*/*' });
+    return this.http.get<OtpUrlResponse>(url, { params: httpParams, headers });
   }
 
   /** Convierte la respuesta cruda del endpoint Token en un AuthResponse. */
