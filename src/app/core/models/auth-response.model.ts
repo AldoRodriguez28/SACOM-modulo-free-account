@@ -13,6 +13,8 @@ export interface AuthResponse {
   systemInfo?: SystemInfo;
   /** Nombre del usuario recibido en el token. */
   userName?: string;
+  /** Sistema de origen del lead (viene de `origin_system` en el handshake). */
+  origen?: string;
   user?: {
     id: string;
     email: string;
@@ -34,19 +36,30 @@ export interface OtpUrlResponse {
 }
 
 /**
- * Respuesta cruda del endpoint `GET {SHARED_MGMT_URI}/Token/{token}`.
- * `system_info` es un string JSON que contiene `email` y `LeadId`.
+ * Respuesta cruda del endpoint `GET {API_URI}/Auth/handshake?token={token}`.
+ * `system_info` viene como objeto con `email` y `LeadId`.
  */
-export interface TokenValidationResponse {
+export interface HandshakeResponse {
   token: string;
   user_Id?: string;
   source?: string;
   user_source_id?: string;
-  system_info?: string;
+  ctcr_sys_dt?: string;
+  ctcr_access_dt?: string;
+  system_info?: {
+    email?: string;
+    Email?: string;
+    LeadId?: number | string;
+    leadId?: number | string;
+  };
   user_name?: string;
   advertiser_id?: string;
+  bc_product_id?: number;
+  case_id?: number;
+  id_cotizacion?: string;
   status?: number;
   role?: string;
   expiration_date?: string;
+  /** Sistema de origen del lead (p.ej. "SACOM-PORTAL"). */
   origin_system?: string;
 }

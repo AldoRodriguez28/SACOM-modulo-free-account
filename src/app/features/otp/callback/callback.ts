@@ -1,11 +1,13 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { AUTH_API, AuthApi } from '../../../core/services/auth-api';
 import { AuthMockService } from '../../../core/services/auth.mock.service';
 
 /**
  * Landing de /otp/callback. Toma el `code` de la URL y lo valida contra el API:
- * - 200  => establece la sesión y redirige al dashboard.
+ * - 200 con origen RegistraTuEmpresa => sesión + página de agradecimiento.
+ * - 200 con cualquier otro origen    => sesión + dashboard.
  * - error => redirige a /no-autorizado.
  */
 @Component({
@@ -34,7 +36,11 @@ export class Callback implements OnInit {
     this.authApi.validateOtp(code, state).subscribe({
       next: (res) => {
         this.auth.setSession(res);
-        this.router.navigate(['/dashboard/metricas']);
+        const destino =
+          res.origen === environment.OTP_ORIGEN_REGISTRA_TUEMPRESA
+            ? ['/thankyou-page']
+            : ['/dashboard/metricas'];
+        this.router.navigate(destino);
       },
       error: () => {
         this.router.navigate(['/no-autorizado']);

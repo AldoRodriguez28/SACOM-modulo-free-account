@@ -34,6 +34,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./features/no-autorizado/no-autorizado-module').then(m => m.NoAutorizadoModule)
   },
+  {
+    path: 'thankyou-page',
+    loadChildren: () =>
+      import('./features/thankyou-page/thankyou-page-module').then(m => m.ThankyouPageModule)
+  },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];

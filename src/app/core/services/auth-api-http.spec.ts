@@ -24,29 +24,32 @@ describe('AuthApiHttp', () => {
     expect(service).toBeTruthy();
   });
 
-  it('loginByToken hace GET al endpoint Token y mapea system_info y user_name', () => {
-    const token = '55F56BA198DDAB19E060220A55073911';
+  it('loginByToken hace GET a /Auth/handshake y mapea system_info, user_name y origen', () => {
+    const token = '560E194422578FDFE060220A55077DCD';
     let result: AuthResponse | undefined;
 
     service.loginByToken(token).subscribe(r => (result = r));
 
-    const req = httpMock.expectOne(`${environment.SHARED_MGMT_URI}/Token/${token}`);
-    expect(req.request.method).toBe('GET');
-    const expectedAuth =
-      'Basic ' + btoa(`${environment.SHARED_MGMT_USER}:${environment.SHARED_MGMT_PASS}`);
-    expect(req.request.headers.get('Authorization')).toBe(expectedAuth);
+    const req = httpMock.expectOne(
+      r => r.method === 'GET' && r.url === `${environment.API_URI}/Auth/handshake`
+    );
+    expect(req.request.params.get('token')).toBe(token);
+    expect(req.request.headers.get('accept')).toBe('*/*');
     req.flush({
       token,
-      system_info: '{"email":"aldo@gmail.com","LeadId":566171}',
-      user_name: 'ALDO DE JESUS RODRIGUEZ RONQUILLO  ',
+      source: 'SACOM-NEGOCIOS',
+      system_info: { email: 'aldo@gmail.com', LeadId: 566172 },
+      user_name: 'aldo  ',
       role: 'CLIENTE-NEGOCIOS',
       status: 1,
+      origin_system: 'SACOM-PORTAL',
     });
 
     expect(result!.token).toBe(token);
     expect(result!.systemInfo!.email).toBe('aldo@gmail.com');
-    expect(result!.leadId).toBe('566171');
-    expect(result!.userName).toBe('ALDO DE JESUS RODRIGUEZ RONQUILLO');
+    expect(result!.leadId).toBe('566172');
+    expect(result!.userName).toBe('aldo');
+    expect(result!.origen).toBe('SACOM-PORTAL');
   });
 
   it('getOtpUrl hace GET a /Auth/otp/url con los 4 params y el header accept', () => {
@@ -95,15 +98,15 @@ describe('AuthApiHttp', () => {
     expect(result!.token).toBe('sess-token');
   });
 
-  it('loginByToken tolera system_info vacío o inválido', () => {
+  it('loginByToken tolera system_info ausente', () => {
     const token = 'sin-info';
     let result: AuthResponse | undefined;
 
     service.loginByToken(token).subscribe(r => (result = r));
 
     httpMock
-      .expectOne(`${environment.SHARED_MGMT_URI}/Token/${token}`)
-      .flush({ token, system_info: '', user_name: '' });
+      .expectOne(r => r.method === 'GET' && r.url === `${environment.API_URI}/Auth/handshake`)
+      .flush({ token, user_name: '' });
 
     expect(result!.token).toBe(token);
     expect(result!.systemInfo).toBeUndefined();

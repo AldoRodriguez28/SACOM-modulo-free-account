@@ -7,5 +7,7 @@ export const environment = {
   SHARED_MGMT_USER: 'SACOM-NEGOCIOS',
   SHARED_MGMT_PASS: 'xui54n8w',
   /** `origen` fijo que espera el endpoint /Auth/otp/url */
-  OTP_ORIGEN: 'RegistraTuEmpresa'
+  OTP_ORIGEN_REGISTRA_TUEMPRESA: 'RegistraTuEmpresa',
+  OTP_ORIGEN_CUENTA_GRATUITA: 'CuentaGratuita'
+
 };

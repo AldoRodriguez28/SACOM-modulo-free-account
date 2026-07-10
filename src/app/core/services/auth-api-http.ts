@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthApi } from './auth-api';
-import { AuthResponse, OtpUrlRequest, OtpUrlResponse, TokenValidationResponse } from '../models/auth-response.model';
+import { AuthResponse, HandshakeResponse, OtpUrlRequest, OtpUrlResponse } from '../models/auth-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiHttp implements AuthApi {
@@ -13,18 +13,12 @@ export class AuthApiHttp implements AuthApi {
   constructor(private http: HttpClient) {}
 
   loginByToken(token: string): Observable<AuthResponse> {
-    const url = `${environment.SHARED_MGMT_URI}/Token/${token}`;
-    const headers = new HttpHeaders({
-      Authorization: this.basicAuthHeader(),
-    });
+    const url = `${this.baseUrl}/Auth/handshake`;
+    const params = new HttpParams().set('token', token);
+    const headers = new HttpHeaders({ accept: '*/*' });
     return this.http
-      .get<TokenValidationResponse>(url, { headers })
-      .pipe(map(raw => this.mapTokenResponse(raw)));
-  }
-
-  /** Construye el header Basic Auth con las credenciales del entorno. */
-  private basicAuthHeader(): string {
-    return 'Basic ' + btoa(`${environment.SHARED_MGMT_USER}:${environment.SHARED_MGMT_PASS}`);
+      .get<HandshakeResponse>(url, { params, headers })
+      .pipe(map(raw => this.mapHandshakeResponse(raw)));
   }
 
   validateOtp(code: string, state: string): Observable<AuthResponse> {
@@ -45,11 +39,11 @@ export class AuthApiHttp implements AuthApi {
     return this.http.get<OtpUrlResponse>(url, { params: httpParams, headers });
   }
 
-  /** Convierte la respuesta cruda del endpoint Token en un AuthResponse. */
-  private mapTokenResponse(raw: TokenValidationResponse): AuthResponse {
-    const info = this.parseSystemInfo(raw.system_info);
-    const email = info['email'] ?? info['Email'];
-    const leadId = info['LeadId'] ?? info['leadId'];
+  /** Convierte la respuesta cruda del handshake en un AuthResponse. */
+  private mapHandshakeResponse(raw: HandshakeResponse): AuthResponse {
+    const info = raw.system_info;
+    const email = info?.email ?? info?.Email;
+    const leadId = info?.LeadId ?? info?.leadId;
     const userName = raw.user_name?.trim();
 
     const response: AuthResponse = { token: raw.token };
@@ -62,16 +56,9 @@ export class AuthApiHttp implements AuthApi {
     if (userName) {
       response.userName = userName;
     }
-    return response;
-  }
-
-  /** `system_info` viene como string JSON; si no es parseable devuelve {}. */
-  private parseSystemInfo(value: string | undefined): Record<string, any> {
-    if (!value) return {};
-    try {
-      return JSON.parse(value);
-    } catch {
-      return {};
+    if (raw.origin_system) {
+      response.origen = raw.origin_system;
     }
+    return response;
   }
 }

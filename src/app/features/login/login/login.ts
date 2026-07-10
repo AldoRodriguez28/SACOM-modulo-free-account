@@ -21,6 +21,13 @@ export class Login implements OnInit {
   form!: FormGroup;
   loading = false;
 
+  /**
+   * `origen` que se envía a OTP, definido por el path de entrada:
+   * - /validacion/:token (hay token)  => RegistraTuEmpresa
+   * - /login (sin token)              => CuentaGratuita
+   */
+  private origen = environment.OTP_ORIGEN_CUENTA_GRATUITA;
+
   readonly demoEmail = DEMO_USER.email;
 
   constructor(
@@ -39,6 +46,7 @@ export class Login implements OnInit {
 
     const token = this.route.snapshot.paramMap.get('token');
     if (token) {
+      this.origen = environment.OTP_ORIGEN_REGISTRA_TUEMPRESA;
       this.validarToken(token);
     }
   }
@@ -89,7 +97,7 @@ export class Login implements OnInit {
       .getOtpUrl({
         email: this.email.value,
         leadId,
-        origen: environment.OTP_ORIGEN,
+        origen: this.origen,
         redirectUri: this.buildRedirectUri(),
       })
       .subscribe({
