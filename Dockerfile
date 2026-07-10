@@ -1,15 +1,22 @@
-# Stage 1: Compilar la aplicación de Angular con subruta
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
+
+# Crear carpeta de trabajo
 WORKDIR /app
+
+# Copiar dependencias e instalar
 COPY package*.json ./
 RUN npm ci
-COPY . .
-RUN npm run build -- --configuration=production --base-href /mis-negocios/
 
-# Stage 2: Servidor Web Nginx
+# Copiar todo el código fuente
+COPY . .
+RUN npx ng build --configuration production
+
 FROM nginx:alpine
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d/
-COPY --from=build /app/dist/sacom-free-account/browser /usr/share/nginx/html/mis-negocios
-EXPOSE 82
+COPY --from=build /app/dist/sacom-free-account/browser /usr/share/nginx/html/mis-negocios/
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
+
+# docker build -t sacom-free-account-front .
+# docker run -d --name sacom-free-account-front --network red-interna -p 4200:80 sacom-free-account-front

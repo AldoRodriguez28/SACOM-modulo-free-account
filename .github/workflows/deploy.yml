@@ -1,18 +1,34 @@
-name: CI/CD sa-sacom-mybusiness-ui Deploy (Docker Multi-Environment)
+name: CI/CD - Validación Entorno Feature (DEVELOPE140)
 
 on:
   push:
-    branches:
-      - main
-      - 'hotfix*'
-      - 'release*'
-  workflow_dispatch:
+    branches: [feature]
+
+env:
+  IMAGE_NAME: sacom-ui-test
+  CONTAINER_NAME: sacom-ui
 
 jobs:
-  trigger-deploy:
-    name: Call Centralized Deploy Pipeline
-    uses: adsa-sistemas/DevOps-ADSA/.github/workflows/deploy-sa-sacom-mybusiness-ui.yml@main
-    secrets: inherit
-    with:
-      environment: ${{ (github.ref_name == 'main' && 'prod') || (startsWith(github.ref_name, 'release') && 'release') || (startsWith(github.ref_name, 'hotfix') && 'hotfix') }}
-      ref_name: ${{ github.ref_name }}
+  deploy-to-dev:
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - name: Descargar Código Fuente
+        uses: actions/checkout@v4
+
+      - name: Construir Imagen Docker (Linux vía WSL)
+        run: wsl -d Ubuntu docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -t ${{ env.IMAGE_NAME }}:latest .
+
+      - name: Detener y Eliminar Contenedor Anterior
+        run: wsl -d Ubuntu docker rm -f ${{ env.CONTAINER_NAME }}
+        continue-on-error: true
+
+      - name: Levantar Contenedor Nuevo
+        run: >
+          wsl -d Ubuntu docker run -d --name ${{ env.CONTAINER_NAME }}
+          --network red-interna
+          -p 8080:80
+          --restart unless-stopped
+          ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Limpiar Imágenes Huérfanas
+        run: wsl -d Ubuntu docker image prune -f
