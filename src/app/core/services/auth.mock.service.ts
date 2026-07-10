@@ -29,7 +29,7 @@ export class AuthMockService {
 
   setPassword(email: string, contactName: string, password: string): Observable<void> {
     const user: User = {
-      id: crypto.randomUUID(),
+      id: this.generateId(),
       email,
       contactName,
       phone: '',
@@ -59,7 +59,7 @@ export class AuthMockService {
       sessionStorage.setItem(this.TOKEN_KEY, res.token);
     }
     const user: User = {
-      id: res.user?.id ?? crypto.randomUUID(),
+      id: res.user?.id ?? this.generateId(),
       email: res.user?.email ?? '',
       contactName: res.user?.contactName ?? '',
       phone: '',
@@ -67,6 +67,22 @@ export class AuthMockService {
     };
     sessionStorage.setItem(this.KEY, JSON.stringify(user));
     this.currentUser.set(user);
+  }
+
+  /**
+   * Genera un UUID. Usa `crypto.randomUUID` cuando está disponible, pero
+   * recurre a un fallback porque ese API solo existe en contextos seguros
+   * (HTTPS o localhost); al servir por http en un host remoto sería undefined.
+   */
+  private generateId(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 
   getToken(): string | null {
