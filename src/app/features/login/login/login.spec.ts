@@ -74,6 +74,7 @@ class AuthApiMockStub implements AuthApi {
       leadId: '566171',
       systemInfo: { email: 'aldo@gmail.com' },
       userName: 'ALDO RODRIGUEZ',
+      origen: 'SACOM-PORTAL',
     });
   }
   validateOtp(): Observable<AuthResponse> {
