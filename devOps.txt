@@ -1,4 +1,4 @@
 DevOps Trigger File for sa-sacom-mybusiness-ui
 This file is modified by DevOps to push changes to GitHub and trigger CI/CD pipelines without modifying the developers' source code.
 
-Trigger: Re-triggering pipeline after mapping container port to 80 to match developer Nginx default.conf configuration.
+Trigger: Re-triggering pipeline after connecting container to external network red-interna to allow Nginx API name resolution.
