@@ -57,6 +57,7 @@ export class AuthMockService {
   setSession(res: AuthResponse): void {
     if (res.token) {
       sessionStorage.setItem(this.TOKEN_KEY, res.token);
+      localStorage.setItem(this.TOKEN_KEY, res.token);
     }
     const user: User = {
       id: res.user?.id ?? this.generateId(),
@@ -92,6 +93,7 @@ export class AuthMockService {
   logout(): void {
     sessionStorage.removeItem(this.KEY);
     sessionStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.TOKEN_KEY);
     this.currentUser.set(null);
   }
 }

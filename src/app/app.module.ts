@@ -6,7 +6,7 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BUSINESS_REPOSITORY } from './data/business/business.repository';
-import { BusinessMockRepository } from './data/business/business.mock.repository';
+import { BusinessHttpRepository } from './data/business/business.http.repository';
 import { AUTH_API } from './core/services/auth-api';
 import { AuthApiHttp } from './core/services/auth-api-http';
 
@@ -21,7 +21,7 @@ import { AuthApiHttp } from './core/services/auth-api-http';
   ],
   providers: [
     provideHttpClient(withInterceptorsFromDi()),
-    { provide: BUSINESS_REPOSITORY, useClass: BusinessMockRepository },
+    { provide: BUSINESS_REPOSITORY, useClass: BusinessHttpRepository },
     // Para volver al mock: reemplazar AuthApiHttp por AuthApiMock.
     { provide: AUTH_API, useClass: AuthApiHttp }
   ],
