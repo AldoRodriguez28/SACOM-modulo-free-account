@@ -120,8 +120,50 @@
     </div>
   </ng-container>
 
+  <!-- ══════════════════════ MODO: BCM IFRAME (ADD/EDIT) ══════════════════════ -->
+  <ng-container *ngIf="(internalMode === 'add' || internalMode === 'edit') && !confirmAction">
+    <div class="drawer-header">
+      <span class="drawer-title">Gestión de negocio</span>
+      <button class="drawer-close" aria-label="Cerrar" (click)="requestClose()">
+        <ng-icon name="heroXMark" size="16"></ng-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body drawer-body--iframe">
+      <ng-container *ngIf="bcmIframeUrl; else bcmWithoutUrl">
+        <iframe
+          class="drawer-iframe"
+          [src]="bcmIframeUrl"
+          (load)="onBcmIframeLoad()"
+          (error)="onBcmIframeError($event)"
+          title="BCM"
+          loading="eager"
+          allowfullscreen>
+        </iframe>
+      </ng-container>
+
+      <ng-template #bcmWithoutUrl>
+        <div class="drawer-iframe-state" *ngIf="bcmIframeLoading">
+          Generando acceso BCM...
+        </div>
+        <div class="drawer-iframe-state drawer-iframe-state--error" *ngIf="!bcmIframeLoading && bcmIframeError">
+          <div>
+            <div>{{ bcmIframeError }}</div>
+            <button
+              type="button"
+              class="btn-secondary drawer-iframe-open"
+              *ngIf="bcmIframeRawUrl"
+              (click)="openBcmInNewTab()">
+              Abrir BCM en nueva pestaña
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </ng-container>
+
   <!-- ══════════════════════ MODO: EDIT ══════════════════════ -->
-  <ng-container *ngIf="internalMode === 'edit' && form && !confirmAction">
+  <ng-container *ngIf="internalMode === 'edit' && form && !confirmAction && false">
     <div class="drawer-header">
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="drawer-back" aria-label="Volver al detalle" (click)="switchToDetail()">
@@ -226,7 +268,7 @@
   </ng-container>
 
   <!-- ══════════════════════ MODO: ADD ══════════════════════ -->
-  <ng-container *ngIf="internalMode === 'add' && form && !confirmAction">
+  <ng-container *ngIf="internalMode === 'add' && form && !confirmAction && false">
     <div class="drawer-header">
       <span class="drawer-title">Nuevo negocio</span>
       <button class="drawer-close" aria-label="Cerrar" (click)="requestClose()">

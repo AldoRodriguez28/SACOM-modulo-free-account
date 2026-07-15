@@ -1,8 +1,13 @@
-import { Component, EventEmitter, Input, NgZone, OnChanges, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, NgZone, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { take, timeout } from 'rxjs';
 import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
+import { BcmEmbedService } from '../../../../core/services/bcm-embed.service';
+import { environment } from '../../../../../environments/environment';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
 
@@ -15,6 +20,14 @@ type ConfirmAction = 'unpublish' | 'publish' | 'delete' | null;
   styleUrl: './business-drawer.scss'
 })
 export class BusinessDrawer implements OnChanges {
+  private readonly bcmEditFallbackUrl =
+    'https://bcm-test.seccionamarilla.com/alta-negocio/4605D59C34344365E060220A55074374';
+  private readonly bcmRequestTimeoutMs = 15000;
+  private readonly bcmAllowedHostnames = environment.BCM_ALLOWED_HOSTNAMES;
+  private bcmRequestId = 0;
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly bcmEmbedService = inject(BcmEmbedService);
+
   @Input() mode: DrawerMode = 'detail';
   @Input() business: Business | null = null;
   @Input() metrics: Metrics | null = null;
@@ -37,6 +50,11 @@ export class BusinessDrawer implements OnChanges {
   toastMessage = '';
   toastType: 'success' | 'error' | 'warning' = 'success';
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  bcmIframeUrl: SafeResourceUrl | null = null;
+  bcmIframeRawUrl: string | null = null;
+  bcmIframeLoading = false;
+  bcmIframeError = '';
 
   // Mapa
   mapCenter: google.maps.LatLngLiteral = { lat: 19.4195, lng: -99.1674 };
@@ -95,14 +113,34 @@ export class BusinessDrawer implements OnChanges {
   constructor(
     private fb: FormBuilder,
     private businessService: BusinessStore,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log('[BCM] ngOnChanges', {
+      mode: this.mode,
+      changedInputs: Object.keys(changes)
+    });
+
+    // Ignore metrics-only updates to avoid re-triggering BCM token generation.
+    const shouldReinitialize = !!changes['mode'] || !!changes['business'];
+    if (!shouldReinitialize) {
+      console.log('[BCM] Ignorando cambio sin mode/business.');
+      return;
+    }
+
     this.internalMode = this.mode;
     this.closing = false;
     this.confirmAction = null;
     this.toastMessage = '';
+    this.bcmIframeUrl = null;
+    this.bcmIframeRawUrl = null;
+    this.bcmIframeError = '';
+    this.bcmIframeLoading = false;
+    this.bcmRequestId++;
+    this.cdr.markForCheck();
 
     if (this.mode === 'edit' && this.business) {
       this.buildForm();
@@ -116,6 +154,113 @@ export class BusinessDrawer implements OnChanges {
       this.buildForm();
       this.currentStep = 1;
       this.logoPreview = '';
+    }
+
+    if (this.mode === 'add') {
+      this.loadBcmIframeForAdd();
+    }
+
+    if (this.mode === 'edit') {
+      this.setBcmIframeUrl(this.bcmEditFallbackUrl);
+    }
+  }
+
+  private loadBcmIframeForAdd(): void {
+    const requestId = ++this.bcmRequestId;
+    this.bcmIframeLoading = true;
+    this.bcmIframeError = '';
+    this.bcmIframeUrl = null;
+    this.bcmIframeRawUrl = null;
+    this.cdr.markForCheck();
+    console.log('[BCM] Solicitando token ADD...');
+
+    this.bcmEmbedService.generateAddToken().pipe(
+      take(1),
+      timeout(this.bcmRequestTimeoutMs),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: response => {
+        this.ngZone.run(() => {
+          if (!this.isCurrentAddRequest(requestId)) {
+            return;
+          }
+
+          console.log('[BCM] Respuesta ADD token:', response);
+          const embedUrl = response?.embedUrl
+            ?? (response as unknown as { data?: { embedUrl?: string } })?.data?.embedUrl
+            ?? (response as unknown as { result?: { embedUrl?: string } })?.result?.embedUrl;
+
+          if (!embedUrl || !this.isAllowedBcmUrl(embedUrl)) {
+            this.bcmIframeError = 'BCM no devolvio una URL valida para el iframe.';
+            this.bcmIframeLoading = false;
+            this.showToast(this.bcmIframeError, 'error');
+            this.cdr.markForCheck();
+            return;
+          }
+
+          this.setBcmIframeUrl(embedUrl);
+          this.bcmIframeLoading = false;
+          this.cdr.markForCheck();
+          console.log('[BCM] Fin de solicitud ADD. loading=false');
+        });
+      },
+      error: err => {
+        this.ngZone.run(() => {
+          if (!this.isCurrentAddRequest(requestId)) {
+            return;
+          }
+
+          console.error('[BCM] Error generando token ADD:', err);
+          const isTimeout = err?.name === 'TimeoutError';
+          this.bcmIframeError = isTimeout
+            ? 'Tiempo de espera agotado al generar acceso BCM. Intenta nuevamente.'
+            : 'No fue posible generar el acceso BCM para alta de negocio.';
+          this.bcmIframeLoading = false;
+          this.showToast(this.bcmIframeError, 'error');
+          this.cdr.markForCheck();
+          console.log('[BCM] Fin de solicitud ADD. loading=false');
+        });
+      }
+    });
+  }
+
+  private setBcmIframeUrl(url: string): void {
+    console.log('[BCM] Asignando iframe URL:', url);
+    this.bcmIframeRawUrl = url;
+    this.bcmIframeError = '';
+    this.bcmIframeLoading = false;
+    this.bcmIframeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.cdr.markForCheck();
+  }
+
+  onBcmIframeLoad(): void {
+    this.bcmIframeError = '';
+    this.cdr.markForCheck();
+    console.log('[BCM] Iframe cargo correctamente.');
+  }
+
+  onBcmIframeError(event: Event): void {
+    this.bcmIframeError = 'No se pudo cargar BCM dentro del panel. Intenta abrirlo en una nueva pestaña.';
+    this.cdr.markForCheck();
+    console.error('[BCM] Error al cargar iframe:', event);
+  }
+
+  openBcmInNewTab(): void {
+    if (!this.bcmIframeRawUrl) return;
+    window.open(this.bcmIframeRawUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  private isCurrentAddRequest(requestId: number): boolean {
+    return this.mode === 'add' && this.internalMode === 'add' && requestId === this.bcmRequestId;
+  }
+
+  private isAllowedBcmUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:') return false;
+      return this.bcmAllowedHostnames.includes(parsed.hostname);
+    } catch {
+      return false;
     }
   }
 
