@@ -25,8 +25,14 @@ export class BusinessStore {
   readonly publishedCount = computed(() => publishedCount(this._businesses()));
   readonly hasPublishSlot = computed(() => hasPublishSlot(this._businesses()));
 
-  constructor() {
-    this.repo.getAll().subscribe(list => this._businesses.set(list));
+  reload(): void {
+    this.repo.getAll().subscribe({
+      next: list => this._businesses.set(list),
+      error: error => {
+        console.error('[BusinessStore] No se pudieron cargar los negocios.', error);
+        this._businesses.set([]);
+      }
+    });
   }
 
   getBusinessById(id: string): Business | undefined {

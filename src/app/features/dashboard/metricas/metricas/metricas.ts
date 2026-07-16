@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, effect } from '@angular/core';
 import { MetricsMockService } from '../../../../core/services/metrics.mock.service';
 import { BusinessStore } from '../../business/business.store';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
@@ -12,7 +12,6 @@ import { Business } from '../../../../domain/business/business.entity';
   styleUrl: './metricas.scss'
 })
 export class Metricas implements OnInit {
-  businesses: Business[] = [];
   metrics: Metrics | null = null;
   chartData: DailyMetric[] = [];
   totalClicks = 0;
@@ -23,6 +22,8 @@ export class Metricas implements OnInit {
   selectedBusiness: Business | null = null;
 
   get userName(): string { return this.auth.currentUser()?.contactName ?? ''; }
+
+  get businesses(): Business[] { return this.businessService.businesses(); }
 
   get publishedCount(): number { return this.businessService.publishedCount(); }
 
@@ -51,13 +52,18 @@ export class Metricas implements OnInit {
     private metricsService: MetricsMockService,
     private businessService: BusinessStore,
     private auth: AuthMockService
-  ) {}
+  ) {
+    effect(() => {
+      this.loadData(this.businessService.businesses());
+    });
+  }
 
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void {
+    this.businessService.reload();
+  }
 
-  private loadData(): void {
-    this.businesses = this.businessService.businesses();
-    const ids = this.businesses.map(b => b.id);
+  private loadData(businesses = this.businessService.businesses()): void {
+    const ids = businesses.map(b => b.id);
     if (!ids.length) {
       this.metrics = null; this.chartData = [];
       this.totalClicks = 0; this.totalImpressions = 0;
