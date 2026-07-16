@@ -1,0 +1,78 @@
+@use 'styles/variables' as *;
+
+.toast-stack {
+  position: fixed;
+  top: $spacing-md;
+  right: $spacing-md;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  max-width: 360px;
+  width: calc(100% - #{$spacing-lg});
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: 12px 14px;
+  border-radius: $radius-lg;
+  border-left: 4px solid $color-border;
+  background: $color-white;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  animation: toast-in 0.2s ease-out;
+
+  &--error {
+    border-left-color: $color-danger;
+    background: $color-danger-bg;
+  }
+  &--success {
+    border-left-color: $color-success;
+    background: $color-success-bg;
+  }
+  &--info {
+    border-left-color: $color-border;
+    background: $color-white;
+  }
+
+  &__icon {
+    font-size: 16px;
+    line-height: 1.4;
+    color: $color-text;
+  }
+
+  &__body { flex: 1; }
+
+  &__text {
+    margin: 0;
+    font-size: 13px;
+    font-weight: $font-weight-bold;
+    color: $color-text;
+  }
+
+  &__detail {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: $color-text-light;
+    line-height: 1.4;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: $color-text-light;
+    cursor: pointer;
+    padding: 0 2px;
+    &:hover { color: $color-text; }
+  }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
