@@ -92,6 +92,10 @@ export class Metricas implements OnInit {
     this.loadData();
   }
 
+  onBcmBusinessRegistered(_biz: Business): void {
+    this.loadData();
+  }
+
   onDrawerDeleted(_id: string): void {
     this.closeDrawer();
     this.loadData();

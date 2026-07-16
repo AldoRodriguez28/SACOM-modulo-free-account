@@ -17,6 +17,7 @@ export interface BcmBusinessRegisteredPayload {
   categoryCode: string;
   categoryName?: string;
   townCode: string;
+  townName?: string;
   timestamp: string;
   targetOrigin?: string;
 }

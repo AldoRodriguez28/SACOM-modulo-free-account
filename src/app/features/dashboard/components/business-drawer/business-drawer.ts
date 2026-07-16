@@ -36,6 +36,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   @Output() saved    = new EventEmitter<Business>();
   @Output() deleted  = new EventEmitter<string>();
   @Output() statusChanged = new EventEmitter<Business>();
+  @Output() bcmBusinessRegistered = new EventEmitter<Business>();
 
   internalMode: DrawerMode = 'detail';
   form!: FormGroup;
@@ -162,7 +163,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
           console.log('[BCM] Negocio registrado en backend:', response);
           this.showToast('Negocio registrado exitosamente.', 'success');
           this.cdr.markForCheck();
-          this.saved.emit(response as unknown as Business);
+          this.bcmBusinessRegistered.emit(response as unknown as Business);
         },
         error: (err) => {
           console.error('[BCM] Error al registrar negocio en backend:', err);
@@ -173,14 +174,14 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(changes?: SimpleChanges): void {
     console.log('[BCM] ngOnChanges', {
       mode: this.mode,
-      changedInputs: Object.keys(changes)
+      changedInputs: Object.keys(changes ?? {})
     });
 
     // Ignore metrics-only updates to avoid re-triggering BCM token generation.
-    const shouldReinitialize = !!changes['mode'] || !!changes['business'];
+    const shouldReinitialize = !changes || !!changes['mode'] || !!changes['business'];
     if (!shouldReinitialize) {
       console.log('[BCM] Ignorando cambio sin mode/business.');
       return;
