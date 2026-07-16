@@ -84,6 +84,14 @@ describe('Metricas', () => {
     expect(loadSpy).toHaveBeenCalled();
   });
 
+  it('onBcmBusinessRegistered reloads data without closing the drawer', () => {
+    component.drawerOpen = true;
+    const loadSpy = spyOn(component as any, 'loadData').and.callThrough();
+    component.onBcmBusinessRegistered({} as any);
+    expect(component.drawerOpen).toBeTrue();
+    expect(loadSpy).toHaveBeenCalled();
+  });
+
   it('onDrawerDeleted closes the drawer and reloads data', () => {
     component.drawerOpen = true;
     const loadSpy = spyOn(component as any, 'loadData').and.callThrough();
