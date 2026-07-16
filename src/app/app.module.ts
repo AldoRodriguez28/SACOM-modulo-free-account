@@ -9,6 +9,7 @@ import { BUSINESS_REPOSITORY } from './data/business/business.repository';
 import { BusinessHttpRepository } from './data/business/business.http.repository';
 import { AUTH_API } from './core/services/auth-api';
 import { AuthApiHttp } from './core/services/auth-api-http';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { AuthApiHttp } from './core/services/auth-api-http';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    AppRoutingModule
+    AppRoutingModule,
+    SharedModule
   ],
   providers: [
     provideHttpClient(withInterceptorsFromDi()),
