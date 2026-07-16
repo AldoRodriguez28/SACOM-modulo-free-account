@@ -148,7 +148,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     const request: RegisterBusinessRequest = {
       businessName: payload.commercialName,
       categoryName: payload.categoryName ?? '',
-      population: '',
+      population: payload.townName ?? '',
       publicUrl: '',
       bcmBusinessId: payload.businessId,
       bcmBusinessVersionNumber: payload.versionNumber
