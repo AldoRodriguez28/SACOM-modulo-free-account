@@ -93,7 +93,7 @@ export class Metricas implements OnInit {
   }
 
   onBcmBusinessRegistered(_biz: Business): void {
-    this.loadData();
+    this.businessService.reload();
   }
 
   onDrawerDeleted(_id: string): void {

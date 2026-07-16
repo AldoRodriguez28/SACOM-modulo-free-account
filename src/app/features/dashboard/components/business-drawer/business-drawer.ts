@@ -161,7 +161,6 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
       ).subscribe({
         next: (response) => {
           console.log('[BCM] Negocio registrado en backend:', response);
-          this.showToast('Negocio registrado exitosamente.', 'success');
           this.cdr.markForCheck();
           this.bcmBusinessRegistered.emit(response as unknown as Business);
         },
