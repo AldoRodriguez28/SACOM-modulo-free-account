@@ -1,0 +1,28 @@
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+  <div
+    *ngFor="let t of toasts(); trackBy: trackById"
+    class="toast"
+    [class.toast--error]="t.type === 'error'"
+    [class.toast--success]="t.type === 'success'"
+    [class.toast--info]="t.type === 'info'"
+    role="alert"
+  >
+    <span class="toast__icon" aria-hidden="true">
+      <ng-container [ngSwitch]="t.type">
+        <ng-container *ngSwitchCase="'error'">&#9888;</ng-container>
+        <ng-container *ngSwitchCase="'success'">&#10003;</ng-container>
+        <ng-container *ngSwitchDefault>&#8505;</ng-container>
+      </ng-container>
+    </span>
+    <div class="toast__body">
+      <p class="toast__text">{{ t.text }}</p>
+      <p class="toast__detail" *ngIf="t.detail">{{ t.detail }}</p>
+    </div>
+    <button
+      type="button"
+      class="toast__close"
+      aria-label="Cerrar notificación"
+      (click)="close(t.id)"
+    >&times;</button>
+  </div>
+</div>

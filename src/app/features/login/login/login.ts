@@ -1,9 +1,11 @@
 import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { AuthMockService, DEMO_USER } from '../../../core/services/auth.mock.service';
 import { AUTH_API, AuthApi } from '../../../core/services/auth-api';
+import { ToastService } from '../../../shared/services/toast';
 
 /** Clave de sessionStorage donde se guarda el leadid recibido en el token */
 export const LEAD_ID_KEY = 'sa_leadid';
@@ -36,6 +38,7 @@ export class Login implements OnInit {
     private route: ActivatedRoute,
     private auth: AuthMockService,
     private cdr: ChangeDetectorRef,
+    private toast: ToastService,
     @Inject(AUTH_API) private authApi: AuthApi
   ) {}
 
@@ -104,8 +107,14 @@ export class Login implements OnInit {
         next: ({ url }) => {
           window.location.href = url;
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.loading = false;
+          const detail = err?.error?.detail ?? err?.error?.title;
+          if (detail) {
+            this.toast.error('Cuenta no registrada', detail);
+          } else {
+            this.toast.error('No pudimos continuar', 'Inténtalo de nuevo en unos momentos.');
+          }
           this.cdr.markForCheck();
         },
       });
