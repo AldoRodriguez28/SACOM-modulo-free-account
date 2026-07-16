@@ -9,6 +9,27 @@ export interface BcmEmbedTokenResponse {
   expirationDateUtc: string;
 }
 
+export interface BcmBusinessRegisteredPayload {
+  type: 'bcm:business-registered';
+  businessId: number;
+  versionNumber: number;
+  commercialName: string;
+  categoryCode: string;
+  categoryName?: string;
+  townCode: string;
+  timestamp: string;
+  targetOrigin?: string;
+}
+
+export interface RegisterBusinessRequest {
+  businessName: string;
+  categoryName: string;
+  population: string;
+  publicUrl: string;
+  bcmBusinessId: number;
+  bcmBusinessVersionNumber: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BcmEmbedService {
   constructor(private http: HttpClient) {}
@@ -25,6 +46,14 @@ export class BcmEmbedService {
     return this.http.post<BcmEmbedTokenResponse>(
       `${environment.API_URI}/businesses/bcm/token/edit`,
       {},
+      { headers: this.buildHeaders() }
+    );
+  }
+
+  registerBusiness(data: RegisterBusinessRequest): Observable<unknown> {
+    return this.http.post(
+      `${environment.API_URI}/Businesses`,
+      data,
       { headers: this.buildHeaders() }
     );
   }

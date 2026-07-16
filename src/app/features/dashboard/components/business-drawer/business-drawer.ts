@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, NgZone, OnChanges, Output, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, EventEmitter, Input, NgZone, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -6,7 +6,7 @@ import { take, timeout } from 'rxjs';
 import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
-import { BcmEmbedService } from '../../../../core/services/bcm-embed.service';
+import { BcmEmbedService, BcmBusinessRegisteredPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
 import { environment } from '../../../../../environments/environment';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
@@ -19,7 +19,7 @@ type ConfirmAction = 'unpublish' | 'publish' | 'delete' | null;
   templateUrl: './business-drawer.html',
   styleUrl: './business-drawer.scss'
 })
-export class BusinessDrawer implements OnChanges {
+export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   private readonly bcmEditFallbackUrl =
     'https://bcm-test.seccionamarilla.com/alta-negocio/4605D59C34344365E060220A55074374';
   private readonly bcmRequestTimeoutMs = 15000;
@@ -27,6 +27,7 @@ export class BusinessDrawer implements OnChanges {
   private bcmRequestId = 0;
   private readonly destroyRef = inject(DestroyRef);
   private readonly bcmEmbedService = inject(BcmEmbedService);
+  private bcmMessageHandler: ((event: MessageEvent) => void) | null = null;
 
   @Input() mode: DrawerMode = 'detail';
   @Input() business: Business | null = null;
@@ -117,6 +118,60 @@ export class BusinessDrawer implements OnChanges {
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit(): void {
+    this.bcmMessageHandler = (event: MessageEvent) => this.handleBcmMessage(event);
+    window.addEventListener('message', this.bcmMessageHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (this.bcmMessageHandler) {
+      window.removeEventListener('message', this.bcmMessageHandler);
+      this.bcmMessageHandler = null;
+    }
+  }
+
+  private handleBcmMessage(event: MessageEvent): void {
+    const data = event.data;
+
+    // BCM puede enviar el payload directamente o envuelto en { payload: {...} }
+    const payload: BcmBusinessRegisteredPayload | undefined =
+      data?.type === 'bcm:business-registered' ? data :
+      data?.payload?.type === 'bcm:business-registered' ? data.payload :
+      undefined;
+
+    if (!payload) return;
+
+    console.log('[BCM] PostMessage recibido:', payload);
+
+    const request: RegisterBusinessRequest = {
+      businessName: payload.commercialName,
+      categoryName: payload.categoryName ?? '',
+      population: '',
+      publicUrl: '',
+      bcmBusinessId: payload.businessId,
+      bcmBusinessVersionNumber: payload.versionNumber
+    };
+
+    this.ngZone.run(() => {
+      this.bcmEmbedService.registerBusiness(request).pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: (response) => {
+          console.log('[BCM] Negocio registrado en backend:', response);
+          this.showToast('Negocio registrado exitosamente.', 'success');
+          this.cdr.markForCheck();
+          this.saved.emit(response as unknown as Business);
+        },
+        error: (err) => {
+          console.error('[BCM] Error al registrar negocio en backend:', err);
+          this.showToast('Error al registrar el negocio. Intenta nuevamente.', 'error');
+          this.cdr.markForCheck();
+        }
+      });
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log('[BCM] ngOnChanges', {
