@@ -31,6 +31,13 @@ export class Login implements OnInit {
   emailReadonly = false;
 
   /**
+   * `true` mientras corre el flujo automático de /validacion/:token: se valida el
+   * token y, si trae correo, se continúa solo hacia la verificación OTP. Mientras
+   * está activo se muestra el estado "Validando tu correo…" en lugar del formulario.
+   */
+  validatingToken = false;
+
+  /**
    * `origen` que se envía a OTP, definido por el path de entrada:
    * - /validacion/:token (hay token)  => RegistraTuEmpresa
    * - /login (sin token)              => CuentaGratuita
@@ -57,35 +64,45 @@ export class Login implements OnInit {
     const token = this.route.snapshot.paramMap.get('token');
     if (token) {
       this.origen = environment.OTP_ORIGEN_REGISTRA_TUEMPRESA;
+      this.validatingToken = true;
       this.validarToken(token);
     }
   }
 
   /**
    * Valida el token recibido en /validacion/:token contra el API (mock mientras
-   * la API real no esté disponible). Con la respuesta coloca el email en el input
-   * y guarda el leadid en sessionStorage.
+   * la API real no esté disponible). Con la respuesta coloca el email en el input,
+   * guarda el leadid en sessionStorage y, si el token trajo correo, continúa solo
+   * hacia la verificación OTP (auto-submit). Si el token falla o no trae correo,
+   * revela el formulario para captura manual.
    */
   private validarToken(token: string): void {
-    this.loading = true;
     this.authApi.loginByToken(token).subscribe({
       next: (res) => {
-        this.loading = false;
         const email = res.systemInfo?.email ?? res.user?.email;
-        if (email) {
-          this.form.patchValue({ email });
-          this.emailReadonly = true;
-          this.cdr.markForCheck();
-        }
         if (res.leadId) {
           sessionStorage.setItem(LEAD_ID_KEY, res.leadId);
         }
         if (res.userName) {
           sessionStorage.setItem(USER_NAME_KEY, res.userName);
         }
+        if (email) {
+          this.form.patchValue({ email });
+          this.emailReadonly = true;
+          // El correo ya viene del token y es de solo lectura: continuamos solo
+          // hacia la verificación. `validatingToken` sigue en true para mantener
+          // el estado "Validando tu correo…" hasta que ocurra la redirección.
+          this.onSubmit();
+        } else {
+          // El token resolvió pero no trajo correo: mostramos el form editable.
+          this.validatingToken = false;
+          this.cdr.markForCheck();
+        }
       },
       error: () => {
-        this.loading = false;
+        // Falló la validación del token: mostramos el form para captura manual.
+        this.validatingToken = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -118,6 +135,9 @@ export class Login implements OnInit {
         },
         error: (err: HttpErrorResponse) => {
           this.loading = false;
+          // Si veníamos del flujo automático del token, revelamos el formulario
+          // para que el usuario pueda reintentar la verificación manualmente.
+          this.validatingToken = false;
           const detail = err?.error?.detail ?? err?.error?.title;
           if (detail) {
             this.toast.error('Cuenta no registrada', detail);
