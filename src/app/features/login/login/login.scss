@@ -56,6 +56,11 @@
   &__input {
     @include input-base;
     &--error { border-color: $color-error; }
+    &--readonly {
+      background: $color-bg;
+      color: $color-text-muted;
+      cursor: not-allowed;
+    }
   }
 
   &__otp-hint {

@@ -36,6 +36,8 @@
         <label for="email">Correo electrónico</label>
         <input id="email" type="email" formControlName="email" class="login__input"
           [class.login__input--error]="email.invalid && email.touched"
+          [class.login__input--readonly]="emailReadonly"
+          [readonly]="emailReadonly"
           placeholder="correo@ejemplo.com">
         <span class="error-msg" *ngIf="email.touched && email.hasError('required')">El correo es requerido</span>
         <span class="error-msg" *ngIf="email.touched && email.hasError('email')">Ingresa un correo válido</span>

@@ -24,6 +24,13 @@ export class Login implements OnInit {
   loading = false;
 
   /**
+   * `true` cuando el correo proviene del token (/validacion/:token). En ese caso
+   * el input de correo queda en solo lectura para que no pueda modificarse el
+   * correo que trae el token.
+   */
+  emailReadonly = false;
+
+  /**
    * `origen` que se envía a OTP, definido por el path de entrada:
    * - /validacion/:token (hay token)  => RegistraTuEmpresa
    * - /login (sin token)              => CuentaGratuita
@@ -67,6 +74,8 @@ export class Login implements OnInit {
         const email = res.systemInfo?.email ?? res.user?.email;
         if (email) {
           this.form.patchValue({ email });
+          this.emailReadonly = true;
+          this.cdr.markForCheck();
         }
         if (res.leadId) {
           sessionStorage.setItem(LEAD_ID_KEY, res.leadId);
