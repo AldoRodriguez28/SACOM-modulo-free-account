@@ -56,12 +56,53 @@
   &__input {
     @include input-base;
     &--error { border-color: $color-error; }
+    &--readonly {
+      background: $color-bg;
+      color: $color-text-muted;
+      cursor: not-allowed;
+    }
+  }
+
+  &__readonly-note {
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    color: $color-text;
+    margin: -4px 0 $spacing-sm;
+    line-height: 1.5;
   }
 
   &__otp-hint {
     font-size: 11px;
     color: $color-text-muted;
     margin: -4px 0 $spacing-md;
+    line-height: 1.5;
+  }
+
+  &__validating {
+    text-align: center;
+    padding: $spacing-lg 0 $spacing-sm;
+  }
+
+  &__spinner {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto $spacing-md;
+    border: 3px solid $color-border;
+    border-top-color: $color-text;
+    border-radius: 50%;
+    animation: login-spin 0.8s linear infinite;
+  }
+
+  &__validating-text {
+    font-size: 15px;
+    font-weight: $font-weight-bold;
+    color: $color-text;
+    margin-bottom: 6px;
+  }
+
+  &__validating-hint {
+    font-size: 12px;
+    color: $color-text-muted;
     line-height: 1.5;
   }
 
@@ -146,4 +187,12 @@
     transition: background 0.15s;
     &:hover { background: #E5C200; }
   }
+}
+
+@keyframes login-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login__spinner { animation: none; }
 }
