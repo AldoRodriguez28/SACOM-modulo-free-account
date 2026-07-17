@@ -75,4 +75,29 @@ describe('BusinessHttpRepository', () => {
     expect(req.request.headers.get('Authorization')).toBe('Bearer local-token');
     req.flush({ businesses: [], total: 0, published: 0 });
   });
+
+  it('remove hace DELETE a /Businesses/{id} con bearer token', () => {
+    const id = '019f66ee-b97a-720e-b01b-5942544a11ff';
+    repo.remove(id).subscribe();
+
+    const req = http.expectOne(`${BUSINESSES_URL}/${id}`);
+    expect(req.request.method).toBe('DELETE');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('remove propaga el error cuando el negocio está publicado (409)', () => {
+    const id = '019f66ec-ef05-7166-80d6-2f01bf8ffe1a';
+    let captured: unknown;
+
+    repo.remove(id).subscribe({ error: err => (captured = err) });
+
+    const req = http.expectOne(`${BUSINESSES_URL}/${id}`);
+    req.flush(
+      { title: 'Conflicto de dominio', status: 409, detail: 'No puedes eliminar un negocio publicado.' },
+      { status: 409, statusText: 'Conflict' }
+    );
+
+    expect((captured as { status: number }).status).toBe(409);
+  });
 });

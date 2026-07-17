@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, map, of, tap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, map, of, tap } from 'rxjs';
 import { Business, BusinessDraft, BusinessStatus } from '../../../domain/business/business.entity';
 import { hasPublishSlot, publishedCount } from '../../../domain/business/business.policies';
 import { requiredFieldsForPublish } from '../../../domain/business/business.validation';
@@ -79,10 +80,13 @@ export class BusinessStore {
     if (!this.hasPublishSlot()) {
       return of({ success: false, message: 'No es posible publicar este negocio porque ya tienes 3 negocios publicados. Para publicar otro, cambia alguno de los publicados a No publicado.' });
     }
-    return this.repo.update(id, { status: 'published' }).pipe(
-      tap(b => this.replace(b)),
-      map(() => ({ success: true, status: 'published' as BusinessStatus, message: 'Tu negocio fue publicado correctamente.' }))
-    );
+    const current = this.getBusinessById(id);
+    if (!current) return of({ success: false, message: 'Negocio no encontrado.' });
+
+    // TODO: reemplazar por el endpoint real de publicación (responde true/false) cuando exista.
+    // Por ahora se simula localmente con la bandera de estado y un aviso de prueba.
+    this.replace({ ...current, status: 'published' });
+    return of({ success: true, status: 'published' as BusinessStatus, message: 'Tu negocio fue publicado correctamente.' });
   }
 
   unpublish(id: string): Observable<Business> {
@@ -97,7 +101,11 @@ export class BusinessStore {
     }
     return this.repo.remove(id).pipe(
       tap(() => this._businesses.set(this._businesses().filter(b => b.id !== id))),
-      map(() => ({ success: true, message: 'El negocio fue eliminado.' }))
+      map(() => ({ success: true, message: 'El negocio fue eliminado.' })),
+      catchError((err: HttpErrorResponse) => of({
+        success: false,
+        message: err.error?.detail ?? 'No se pudo eliminar el negocio. Intenta nuevamente.'
+      }))
     );
   }
 

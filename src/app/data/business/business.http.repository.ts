@@ -29,8 +29,10 @@ export class BusinessHttpRepository implements BusinessRepository {
     return this.notImplemented('update');
   }
 
-  remove(_id: string): Observable<void> {
-    return this.notImplemented('remove');
+  remove(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.businessesUrl}/${id}`, {
+      headers: this.buildHeaders()
+    });
   }
 
   uploadLogo(_file: File): Observable<string> {
