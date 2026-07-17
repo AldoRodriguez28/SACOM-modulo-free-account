@@ -28,6 +28,17 @@
     <!-- Tagline -->
     <p class="login__tagline">Panel de gestión de negocios</p>
 
+    <!-- Estado de validación automática del flujo /validacion/:token -->
+    <div class="login__validating" *ngIf="validatingToken" role="status" aria-live="polite">
+      <div class="login__spinner" aria-hidden="true"></div>
+      <p class="login__validating-text">Validando tu correo…</p>
+      <p class="login__validating-hint">
+        Es necesario validar tu correo para continuar. Te llevaremos al siguiente paso en un momento.
+      </p>
+    </div>
+
+    <ng-container *ngIf="!validatingToken">
+
     <h1 class="login__title">Inicia sesión</h1>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login__form">
@@ -36,10 +47,16 @@
         <label for="email">Correo electrónico</label>
         <input id="email" type="email" formControlName="email" class="login__input"
           [class.login__input--error]="email.invalid && email.touched"
+          [class.login__input--readonly]="emailReadonly"
+          [readonly]="emailReadonly"
           placeholder="correo@ejemplo.com">
         <span class="error-msg" *ngIf="email.touched && email.hasError('required')">El correo es requerido</span>
         <span class="error-msg" *ngIf="email.touched && email.hasError('email')">Ingresa un correo válido</span>
       </div>
+
+      <p class="login__readonly-note" *ngIf="emailReadonly">
+        Es necesario validar tu correo para continuar.
+      </p>
 
       <p class="login__otp-hint">
         Te enviaremos un código de verificación a este correo.
@@ -66,6 +83,8 @@
         Usar correo demo
       </button>
     </div> -->
+
+    </ng-container>
 
   </div>
 </div>
