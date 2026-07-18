@@ -23,11 +23,25 @@ export interface BcmBusinessRegisteredPayload {
 }
 
 export interface BcmErrorPayload {
-  type: 'bcm:error' | 'bcm:business-registration-error';
+  type:
+    | 'bcm:error'
+    | 'bcm:business-registration-error'
+    | 'bcm:business-conflict';
+
   message?: string;
+  errorMessage?: string;
   errorCode?: string;
+  httpStatus?: number;
+
   businessId?: number;
   versionNumber?: number;
+
+  commercialName?: string;
+  categoryCode?: string;
+  categoryName?: string;
+  townCode?: string;
+  townName?: string;
+
   timestamp?: string;
   targetOrigin?: string;
   details?: unknown;
