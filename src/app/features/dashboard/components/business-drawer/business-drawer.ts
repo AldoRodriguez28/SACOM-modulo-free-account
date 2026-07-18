@@ -6,7 +6,7 @@ import { take, timeout } from 'rxjs';
 import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
-import { BcmEmbedService, BcmBusinessRegisteredPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
+import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmErrorPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
 import { environment } from '../../../../../environments/environment';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
@@ -135,6 +135,12 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   private handleBcmMessage(event: MessageEvent): void {
     const data = event.data;
 
+    const errorPayload = this.extractBcmErrorPayload(data);
+    if (errorPayload) {
+      this.reportBcmErrorEvent(event.origin, errorPayload);
+      return;
+    }
+
     // BCM puede enviar el payload directamente o envuelto en { payload: {...} }
     const payload: BcmBusinessRegisteredPayload | undefined =
       data?.type === 'bcm:business-registered' ? data :
@@ -171,6 +177,71 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  private extractBcmErrorPayload(data: unknown): BcmErrorPayload | undefined {
+    const payload = this.unwrapBcmPayload(data);
+    if (!payload || typeof payload !== 'object') {
+      return undefined;
+    }
+
+    const candidate = payload as Partial<BcmErrorPayload>;
+    return candidate.type === 'bcm:error' || candidate.type === 'bcm:business-registration-error'
+      ? candidate as BcmErrorPayload
+      : undefined;
+  }
+
+  private unwrapBcmPayload(data: unknown): unknown {
+    if (data && typeof data === 'object' && 'payload' in data) {
+      return (data as { payload?: unknown }).payload;
+    }
+
+    return data;
+  }
+
+  private reportBcmErrorEvent(origin: string, payload: BcmErrorPayload): void {
+    const message = payload.message?.trim() || 'BCM reporto un error durante el alta del negocio.';
+
+    this.ngZone.run(() => {
+      this.bcmEmbedService.registerBcmEvent({
+        eventType: payload.type,
+        severity: 'ERROR',
+        message,
+        errorCode: payload.errorCode,
+        bcmBusinessId: payload.businessId ?? null,
+        bcmBusinessVersionNumber: payload.versionNumber ?? null,
+        origin: origin || undefined,
+        targetOrigin: payload.targetOrigin,
+        occurredAtUtc: payload.timestamp ?? new Date().toISOString(),
+        rawPayload: this.safeSerialize(payload),
+        details: this.safeSerialize(payload.details)
+      }).pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: () => {
+          this.showToast(message, 'error');
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('[BCM] Error al registrar el evento BCM:', err);
+          this.showToast(message, 'error');
+          this.cdr.markForCheck();
+        }
+      });
+    });
+  }
+
+  private safeSerialize(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   }
 
   ngOnChanges(changes?: SimpleChanges): void {
