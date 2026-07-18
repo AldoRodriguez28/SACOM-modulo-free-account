@@ -22,6 +22,31 @@ export interface BcmBusinessRegisteredPayload {
   targetOrigin?: string;
 }
 
+export interface BcmErrorPayload {
+  type: 'bcm:error' | 'bcm:business-registration-error';
+  message?: string;
+  errorCode?: string;
+  businessId?: number;
+  versionNumber?: number;
+  timestamp?: string;
+  targetOrigin?: string;
+  details?: unknown;
+}
+
+export interface RegisterBcmEventRequest {
+  eventType: string;
+  severity: 'INFO' | 'WARN' | 'ERROR';
+  message: string;
+  errorCode?: string;
+  bcmBusinessId?: number | null;
+  bcmBusinessVersionNumber?: number | null;
+  origin?: string;
+  targetOrigin?: string;
+  occurredAtUtc?: string;
+  rawPayload?: string;
+  details?: string;
+}
+
 export interface RegisterBusinessRequest {
   businessName: string;
   categoryName: string;
@@ -54,6 +79,14 @@ export class BcmEmbedService {
   registerBusiness(data: RegisterBusinessRequest): Observable<unknown> {
     return this.http.post(
       `${environment.API_URI}/Businesses`,
+      data,
+      { headers: this.buildHeaders() }
+    );
+  }
+
+  registerBcmEvent(data: RegisterBcmEventRequest): Observable<void> {
+    return this.http.post<void>(
+      `${environment.API_URI}/bcm/events`,
       data,
       { headers: this.buildHeaders() }
     );
