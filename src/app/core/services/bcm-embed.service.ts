@@ -82,9 +82,9 @@ export class BcmEmbedService {
     );
   }
 
-  generateEditToken(): Observable<BcmEmbedTokenResponse> {
+  generateEditToken(portalBusinessId: string): Observable<BcmEmbedTokenResponse> {
     return this.http.post<BcmEmbedTokenResponse>(
-      `${environment.API_URI}/businesses/bcm/token/edit`,
+      `${environment.API_URI}/businesses/${encodeURIComponent(portalBusinessId)}/bcm/token/edit`,
       {},
       { headers: this.buildHeaders() }
     );

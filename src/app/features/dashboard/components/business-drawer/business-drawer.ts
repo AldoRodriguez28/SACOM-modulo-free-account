@@ -20,8 +20,6 @@ type ConfirmAction = 'unpublish' | 'publish' | 'delete' | null;
   styleUrl: './business-drawer.scss'
 })
 export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
-  private readonly bcmEditFallbackUrl =
-    'https://bcm-test.seccionamarilla.com/alta-negocio/4605D59C34344365E060220A55074374';
   private readonly bcmRequestTimeoutMs = 15000;
   private readonly bcmAllowedHostnames = environment.BCM_ALLOWED_HOSTNAMES;
   private bcmRequestId = 0;
@@ -303,8 +301,8 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
       this.loadBcmIframeForAdd();
     }
 
-    if (this.mode === 'edit') {
-      this.setBcmIframeUrl(this.bcmEditFallbackUrl);
+    if (this.mode === 'edit' && this.business) {
+      this.loadBcmIframeForEdit(this.business.id);
     }
   }
 
@@ -367,6 +365,62 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     });
   }
 
+  private loadBcmIframeForEdit(portalBusinessId: string): void {
+    const requestId = ++this.bcmRequestId;
+    this.bcmIframeLoading = true;
+    this.bcmIframeError = '';
+    this.bcmIframeUrl = null;
+    this.bcmIframeRawUrl = null;
+    this.cdr.markForCheck();
+    console.log('[BCM] Solicitando token EDIT...', { portalBusinessId });
+
+    this.bcmEmbedService.generateEditToken(portalBusinessId).pipe(
+      take(1),
+      timeout(this.bcmRequestTimeoutMs),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: response => {
+        this.ngZone.run(() => {
+          if (!this.isCurrentEditRequest(requestId, portalBusinessId)) {
+            return;
+          }
+
+          console.log('[BCM] Respuesta EDIT token:', response);
+          const embedUrl = response?.embedUrl
+            ?? (response as unknown as { data?: { embedUrl?: string } })?.data?.embedUrl
+            ?? (response as unknown as { result?: { embedUrl?: string } })?.result?.embedUrl;
+
+          if (!embedUrl || !this.isAllowedBcmUrl(embedUrl)) {
+            this.bcmIframeError = 'BCM no devolvio una URL valida para el iframe.';
+            this.bcmIframeLoading = false;
+            this.showToast(this.bcmIframeError, 'error');
+            this.cdr.markForCheck();
+            return;
+          }
+
+          this.setBcmIframeUrl(embedUrl);
+          this.cdr.markForCheck();
+        });
+      },
+      error: err => {
+        this.ngZone.run(() => {
+          if (!this.isCurrentEditRequest(requestId, portalBusinessId)) {
+            return;
+          }
+
+          console.error('[BCM] Error generando token EDIT:', err);
+          const isTimeout = err?.name === 'TimeoutError';
+          this.bcmIframeError = isTimeout
+            ? 'Tiempo de espera agotado al generar acceso BCM. Intenta nuevamente.'
+            : 'No fue posible generar el acceso BCM para editar el negocio.';
+          this.bcmIframeLoading = false;
+          this.showToast(this.bcmIframeError, 'error');
+          this.cdr.markForCheck();
+        });
+      }
+    });
+  }
+
   private setBcmIframeUrl(url: string): void {
     console.log('[BCM] Asignando iframe URL:', url);
     this.bcmIframeRawUrl = url;
@@ -395,6 +449,13 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
 
   private isCurrentAddRequest(requestId: number): boolean {
     return this.mode === 'add' && this.internalMode === 'add' && requestId === this.bcmRequestId;
+  }
+
+  private isCurrentEditRequest(requestId: number, portalBusinessId: string): boolean {
+    return this.mode === 'edit'
+      && this.internalMode === 'edit'
+      && this.business?.id === portalBusinessId
+      && requestId === this.bcmRequestId;
   }
 
   private isAllowedBcmUrl(url: string): boolean {
