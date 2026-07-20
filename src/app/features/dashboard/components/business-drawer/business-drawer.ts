@@ -452,8 +452,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   }
 
   private isCurrentEditRequest(requestId: number, portalBusinessId: string): boolean {
-    return this.mode === 'edit'
-      && this.internalMode === 'edit'
+    return this.internalMode === 'edit'
       && this.business?.id === portalBusinessId
       && requestId === this.bcmRequestId;
   }
@@ -520,6 +519,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
       this.logoPreview = src.logoUrl;
       this.mapCenter = { lat: src.address.lat, lng: src.address.lng };
       this.markerPosition = { ...this.mapCenter };
+      this.loadBcmIframeForEdit(this.business.id);
     }
   }
 
