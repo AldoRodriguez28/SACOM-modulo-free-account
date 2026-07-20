@@ -19,6 +19,24 @@ describe('BcmEmbedService', () => {
 
   afterEach(() => httpMock.verify());
 
+  it('generateEditToken incluye PortalBusinessId en la ruta', () => {
+    const portalBusinessId = '9db53819-e640-4f14-97e8-e3609a32ac48';
+
+    service.generateEditToken(portalBusinessId).subscribe();
+
+    const req = httpMock.expectOne(
+      `${environment.API_URI}/businesses/${portalBusinessId}/bcm/token/edit`
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+
+    req.flush({
+      token: 'token',
+      embedUrl: 'https://bcm-test.seccionamarilla.com/token',
+      expirationDateUtc: '2026-09-03T23:59:59Z'
+    });
+  });
+
   it('registerBcmEvent hace POST a /bcm/events', () => {
     let completed = false;
 
