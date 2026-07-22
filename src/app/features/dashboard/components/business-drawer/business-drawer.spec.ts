@@ -53,6 +53,24 @@ describe('BusinessDrawer', () => {
     expect(component.form.value.contactEmail).toBe('j@t.com');
   });
 
+  it('Continuar edición solicita el token BCM con el PortalBusinessId', () => {
+    const business = fixtureBiz();
+    const bcmService = (component as any).bcmEmbedService;
+    const generateEditToken = spyOn(bcmService, 'generateEditToken').and.returnValue(of({
+      token: 'token-edit',
+      embedUrl: 'https://bcm-test.seccionamarilla.com/edicion-negocio/token-edit',
+      expirationDateUtc: '2026-09-03T23:59:59Z'
+    }));
+    component.mode = 'detail';
+    component.business = business;
+    component.ngOnChanges();
+
+    component.switchToEdit();
+
+    expect(generateEditToken).toHaveBeenCalledOnceWith(business.id);
+    expect(component.internalMode).toBe('edit');
+  });
+
   it('ngOnChanges in add mode produces a blank form', () => {
     component.mode = 'add';
     component.business = null;

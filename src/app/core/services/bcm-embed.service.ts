@@ -22,6 +22,45 @@ export interface BcmBusinessRegisteredPayload {
   targetOrigin?: string;
 }
 
+export interface BcmErrorPayload {
+  type:
+    | 'bcm:error'
+    | 'bcm:business-registration-error'
+    | 'bcm:business-conflict';
+
+  message?: string;
+  errorMessage?: string;
+  errorCode?: string;
+  httpStatus?: number;
+
+  businessId?: number;
+  versionNumber?: number;
+
+  commercialName?: string;
+  categoryCode?: string;
+  categoryName?: string;
+  townCode?: string;
+  townName?: string;
+
+  timestamp?: string;
+  targetOrigin?: string;
+  details?: unknown;
+}
+
+export interface RegisterBcmEventRequest {
+  eventType: string;
+  severity: 'INFO' | 'WARN' | 'ERROR';
+  message: string;
+  errorCode?: string;
+  bcmBusinessId?: number | null;
+  bcmBusinessVersionNumber?: number | null;
+  origin?: string;
+  targetOrigin?: string;
+  occurredAtUtc?: string;
+  rawPayload?: string;
+  details?: string;
+}
+
 export interface RegisterBusinessRequest {
   businessName: string;
   categoryName: string;
@@ -43,9 +82,9 @@ export class BcmEmbedService {
     );
   }
 
-  generateEditToken(): Observable<BcmEmbedTokenResponse> {
+  generateEditToken(portalBusinessId: string): Observable<BcmEmbedTokenResponse> {
     return this.http.post<BcmEmbedTokenResponse>(
-      `${environment.API_URI}/businesses/bcm/token/edit`,
+      `${environment.API_URI}/businesses/${encodeURIComponent(portalBusinessId)}/bcm/token/edit`,
       {},
       { headers: this.buildHeaders() }
     );
@@ -54,6 +93,14 @@ export class BcmEmbedService {
   registerBusiness(data: RegisterBusinessRequest): Observable<unknown> {
     return this.http.post(
       `${environment.API_URI}/Businesses`,
+      data,
+      { headers: this.buildHeaders() }
+    );
+  }
+
+  registerBcmEvent(data: RegisterBcmEventRequest): Observable<void> {
+    return this.http.post<void>(
+      `${environment.API_URI}/bcm/events`,
       data,
       { headers: this.buildHeaders() }
     );
