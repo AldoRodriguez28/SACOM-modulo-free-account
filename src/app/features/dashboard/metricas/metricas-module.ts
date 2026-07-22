@@ -15,7 +15,6 @@ import {
   heroArrowUpTray,
   heroArrowDownTray,
   heroCheckCircle,
-  heroXCircle,
   heroChevronRight,
   heroPlus,
   heroMapPin,
@@ -45,7 +44,7 @@ const routes: Routes = [{ path: '', component: Metricas }];
     NgIconsModule.withIcons({
       heroBuildingStorefront, heroXMark, heroPencilSquare, heroTrash,
       heroArrowLeft, heroArrowRight, heroArrowUpTray, heroArrowDownTray,
-      heroCheckCircle, heroXCircle, heroChevronRight, heroPlus, heroMapPin,
+      heroCheckCircle, heroChevronRight, heroPlus, heroMapPin,
       heroCursorArrowRays, heroEye, heroEyeSlash,
       heroArrowTrendingUp, heroBriefcase, heroExclamationTriangle
     })

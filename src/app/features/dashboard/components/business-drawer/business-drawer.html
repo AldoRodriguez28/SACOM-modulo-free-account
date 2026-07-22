@@ -81,19 +81,32 @@
         </div>
       </div>
 
+      <!-- URL del portal -->
+      <div class="drawer-portal-link" *ngIf="business.urlPortal">
+        <div class="drawer-portal-link__icon">
+          <ng-icon name="heroEye" size="16"></ng-icon>
+        </div>
+        <div class="drawer-portal-link__info">
+          <div class="drawer-info-label">URL del portal</div>
+          <a [href]="business.urlPortal" target="_blank" rel="noopener noreferrer"
+             class="drawer-portal-link__value drawer-tooltip drawer-tooltip--portal"
+             [attr.data-tooltip]="business.urlPortal">
+            <span class="drawer-portal-link__value-text">{{ business.urlPortal }}</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Campos requeridos para publicar -->
       <div class="drawer-form-section" *ngIf="business.fieldsValidation?.campos?.length">Campos requeridos para publicar</div>
       <div class="drawer-fields-list" *ngIf="business.fieldsValidation?.campos?.length">
         <div class="drawer-field-row" *ngFor="let f of business.fieldsValidation!.campos">
-          <ng-icon
-            [name]="f.completo ? 'heroCheckCircle' : 'heroXCircle'"
-            size="16"
-            [class]="f.completo ? 'drawer-field-row__icon--ok' : 'drawer-field-row__icon--missing'">
-          </ng-icon>
-          <div class="drawer-field-row__info">
-            <div class="drawer-field-row__name">{{ f.campo }}</div>
-            <div class="drawer-field-row__value">{{ f.valor || 'N/A' }}</div>
-          </div>
+          <div class="drawer-field-row__name">{{ f.campo }}</div>
+          <span
+            class="drawer-field-row__badge drawer-tooltip"
+            [ngClass]="f.valor ? 'drawer-field-row__badge--ok drawer-tooltip--ok' : 'drawer-field-row__badge--missing drawer-tooltip--missing'"
+            [attr.data-tooltip]="f.valor || 'Sin información'">
+            <span class="drawer-field-row__badge-text">{{ f.valor || 'Sin información' }}</span>
+          </span>
         </div>
       </div>
     </div>

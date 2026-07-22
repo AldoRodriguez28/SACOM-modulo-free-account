@@ -16,6 +16,7 @@ export interface BusinessSummaryDto {
 
 export interface BusinessFieldItemDto {
   campo: string;
+  requerido: boolean;
   completo: boolean;
   valor: string | null;
 }
@@ -38,6 +39,7 @@ export interface BusinessDetailDto {
   createdAt: string;
   updatedAt: string | null;
   fieldsValidation: BusinessFieldsValidationDto | null;
+  urlPortal: string | null;
 }
 
 const emptyAddress = {
@@ -96,7 +98,8 @@ export const businessMapper = {
       publishedAt: dto.publishedAt,
       unpublishedAt: dto.unpublishedAt,
       updatedAt: dto.updatedAt,
-      fieldsValidation: mapFieldsValidation(dto.fieldsValidation)
+      fieldsValidation: mapFieldsValidation(dto.fieldsValidation),
+      urlPortal: dto.urlPortal ?? ''
     };
   },
 
@@ -107,7 +110,12 @@ export const businessMapper = {
 
 function mapFieldsValidation(dto: BusinessFieldsValidationDto | null): BusinessFieldsValidation | null {
   if (!dto) return null;
-  return { completo: dto.completo, campos: dto.campos ?? [] };
+  return {
+    completo: dto.completo,
+    campos: (dto.campos ?? []).map(c => ({
+      campo: c.campo, requerido: c.requerido, completo: c.completo, valor: c.valor
+    }))
+  };
 }
 
 function mapBusinessStatus(status: string): BusinessStatus {

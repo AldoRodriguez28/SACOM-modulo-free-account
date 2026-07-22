@@ -106,15 +106,63 @@
 .drawer-info-label { font-size: 9px; font-weight: $font-weight-bold; color: $color-text-muted; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 3px; }
 .drawer-info-value { font-size: 12px; font-weight: $font-weight-semibold; color: $color-text; }
 .drawer-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.drawer-fields-list { display: flex; flex-direction: column; gap: 8px; }
-.drawer-field-row {
-  display: flex; align-items: flex-start; gap: 8px;
-  padding: 8px 10px; background: $color-bg; border-radius: $radius-md;
-  &__icon--ok { color: #16a34a; flex-shrink: 0; margin-top: 1px; }
-  &__icon--missing { color: $color-danger; flex-shrink: 0; margin-top: 1px; }
+
+// URL del portal
+.drawer-portal-link {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: $spacing-md; padding: 10px 12px;
+  background: $color-primary-tint; border: 1px solid $color-primary;
+  border-radius: $radius-lg;
+  &__icon { width: 30px; height: 30px; flex-shrink: 0; border-radius: $radius-md; background: $color-white; display: flex; align-items: center; justify-content: center; color: $color-text; }
   &__info { flex: 1; min-width: 0; }
-  &__name { font-size: 11px; font-weight: $font-weight-bold; color: $color-text; }
-  &__value { font-size: 11px; color: $color-text-muted; margin-top: 1px; }
+  &__value { display: block; font-size: 12px; font-weight: $font-weight-semibold; color: $color-text; text-decoration: none; &:hover { text-decoration: underline; } }
+  &__value-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+// Tooltip (CSS puro) para valores truncados: portal link y badges de campos
+.drawer-tooltip {
+  position: relative;
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: max-content;
+    max-width: 220px;
+    white-space: normal;
+    word-break: break-word;
+    padding: 8px 10px;
+    border-radius: $radius-md;
+    font-size: 11px;
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 6px 16px rgba(0,0,0,.14);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+    z-index: 30;
+  }
+  &:hover::after, &:focus-visible::after { opacity: 1; visibility: visible; transform: translateY(0); }
+
+  &--ok::after      { background: $color-success-bg; color: $color-success; border: 1px solid rgba($color-success, .25); }
+  &--missing::after { background: $color-danger-bg;  color: $color-danger;  border: 1px solid rgba($color-danger, .25); }
+  &--portal::after  { background: $color-primary-tint; color: $color-text; border: 1px solid $color-primary; }
+}
+
+// Campos requeridos para publicar
+.drawer-fields-list { display: flex; flex-direction: column; gap: 6px; }
+.drawer-field-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 10px; background: $color-bg; border-radius: $radius-md;
+  &__name { font-size: 11px; font-weight: $font-weight-semibold; color: $color-text; flex: 1; min-width: 0; }
+  &__badge {
+    flex-shrink: 0; max-width: 55%;
+    font-size: 10px; font-weight: $font-weight-bold;
+    padding: 4px 10px; border-radius: $radius-full;
+    &--ok { background: $color-success-bg; color: $color-success; }
+    &--missing { background: $color-danger-bg; color: $color-danger; }
+  }
+  &__badge-text { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 .drawer-tag { background: $color-bg; color: $color-text; font-size: 10px; font-weight: $font-weight-semibold; padding: 3px 8px; border-radius: $radius-md; }
 .drawer-form-section { font-size: 10px; font-weight: $font-weight-bold; color: $color-text-muted; letter-spacing: .8px; text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid $color-border; margin: 14px 0 10px; }
