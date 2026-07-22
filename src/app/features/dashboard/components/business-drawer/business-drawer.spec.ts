@@ -71,6 +71,48 @@ describe('BusinessDrawer', () => {
     expect(component.internalMode).toBe('edit');
   });
 
+  it('registra en logs los eventos BCM de edición', () => {
+    const bcmService = (component as any).bcmEmbedService;
+    const registerBcmEvent = spyOn(bcmService, 'registerBcmEvent').and.returnValue(of(void 0));
+    const commonPayload = {
+      businessId: 12600329,
+      versionNumber: 1,
+      commercialName: 'Tortilería Doña Luz Puebla',
+      timestamp: '2026-07-22T00:28:29.524Z',
+      targetOrigin: 'https://www.seccionamarillaus.com/mis-negocios'
+    };
+
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: { type: 'bcm:business-updated', ...commonPayload }
+    }));
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: {
+        type: 'bcm:business-error',
+        ...commonPayload,
+        errorMessage: 'No se pudo guardar el avance.',
+        httpStatus: 500
+      }
+    }));
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: { payload: { type: 'bcm:business-cancelled', ...commonPayload } }
+    }));
+
+    expect(registerBcmEvent).toHaveBeenCalledTimes(3);
+    expect(registerBcmEvent.calls.argsFor(0)[0]).toEqual(jasmine.objectContaining({
+      eventType: 'bcm:business-updated', severity: 'INFO', bcmBusinessId: 12600329
+    }));
+    expect(registerBcmEvent.calls.argsFor(1)[0]).toEqual(jasmine.objectContaining({
+      eventType: 'bcm:business-error', severity: 'ERROR',
+      message: 'No se pudo guardar el avance.', errorCode: '500'
+    }));
+    expect(registerBcmEvent.calls.argsFor(2)[0]).toEqual(jasmine.objectContaining({
+      eventType: 'bcm:business-cancelled', severity: 'INFO'
+    }));
+  });
+
   it('ngOnChanges in add mode produces a blank form', () => {
     component.mode = 'add';
     component.business = null;

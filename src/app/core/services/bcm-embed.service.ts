@@ -22,6 +22,17 @@ export interface BcmBusinessRegisteredPayload {
   targetOrigin?: string;
 }
 
+export interface BcmEditEventPayload {
+  type: 'bcm:business-updated' | 'bcm:business-error' | 'bcm:business-cancelled';
+  businessId: number;
+  versionNumber: number;
+  commercialName: string;
+  errorMessage?: string;
+  httpStatus?: number;
+  timestamp: string;
+  targetOrigin?: string;
+}
+
 export interface BcmErrorPayload {
   type:
     | 'bcm:error'

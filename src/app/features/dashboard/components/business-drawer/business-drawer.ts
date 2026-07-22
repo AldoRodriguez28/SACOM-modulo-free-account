@@ -6,7 +6,7 @@ import { take, timeout } from 'rxjs';
 import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
-import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmErrorPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
+import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmEditEventPayload, BcmErrorPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
 import { environment } from '../../../../../environments/environment';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
@@ -133,6 +133,12 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   private handleBcmMessage(event: MessageEvent): void {
     const data = event.data;
 
+    const editEventPayload = this.extractBcmEditEventPayload(data);
+    if (editEventPayload) {
+      this.reportBcmEditEvent(event.origin, editEventPayload);
+      return;
+    }
+
     const errorPayload = this.extractBcmErrorPayload(data);
     if (errorPayload) {
       this.reportBcmErrorEvent(event.origin, errorPayload);
@@ -173,6 +179,54 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
           this.showToast('Error al registrar el negocio. Intenta nuevamente.', 'error');
           this.cdr.markForCheck();
         }
+      });
+    });
+  }
+
+  private extractBcmEditEventPayload(data: unknown): BcmEditEventPayload | undefined {
+    const payload = this.unwrapBcmPayload(data);
+    if (!payload || typeof payload !== 'object') {
+      return undefined;
+    }
+
+    const candidate = payload as Partial<BcmEditEventPayload>;
+    const supportedTypes: BcmEditEventPayload['type'][] = [
+      'bcm:business-updated',
+      'bcm:business-error',
+      'bcm:business-cancelled'
+    ];
+
+    return candidate.type && supportedTypes.includes(candidate.type)
+      ? candidate as BcmEditEventPayload
+      : undefined;
+  }
+
+  private reportBcmEditEvent(origin: string, payload: BcmEditEventPayload): void {
+    const severity = payload.type === 'bcm:business-error' ? 'ERROR' : 'INFO';
+    const message = payload.type === 'bcm:business-error'
+      ? payload.errorMessage?.trim() || 'BCM reportó un error durante la edición del negocio.'
+      : payload.type === 'bcm:business-updated'
+        ? `BCM actualizó correctamente el negocio ${payload.commercialName}.`
+        : `BCM canceló la edición del negocio ${payload.commercialName}.`;
+
+    this.ngZone.run(() => {
+      this.bcmEmbedService.registerBcmEvent({
+        eventType: payload.type,
+        severity,
+        message,
+        errorCode: payload.httpStatus !== undefined ? String(payload.httpStatus) : undefined,
+        bcmBusinessId: payload.businessId,
+        bcmBusinessVersionNumber: payload.versionNumber,
+        origin: origin || undefined,
+        targetOrigin: payload.targetOrigin,
+        occurredAtUtc: payload.timestamp,
+        rawPayload: this.safeSerialize(payload)
+      }).pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: () => console.log('[BCM] Evento de edición registrado:', payload.type),
+        error: err => console.error('[BCM] Error al registrar evento de edición:', err)
       });
     });
   }
