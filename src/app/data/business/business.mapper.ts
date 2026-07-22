@@ -1,4 +1,4 @@
-import { Business, BusinessStatus } from '../../domain/business/business.entity';
+import { Business, BusinessFieldsValidation, BusinessStatus } from '../../domain/business/business.entity';
 
 export interface BusinessesResponseDto {
   businesses: BusinessSummaryDto[];
@@ -8,9 +8,44 @@ export interface BusinessesResponseDto {
 
 export interface BusinessSummaryDto {
   portalBusinessId: string;
-  businessName: string;
+  businessName: string | null;
+  categoryName: string | null;
+  population: string | null;
   status: string;
 }
+
+export interface BusinessFieldItemDto {
+  campo: string;
+  completo: boolean;
+  valor: string | null;
+}
+
+export interface BusinessFieldsValidationDto {
+  completo: boolean;
+  campos: BusinessFieldItemDto[];
+}
+
+export interface BusinessDetailDto {
+  portalBusinessId: string;
+  businessName: string | null;
+  categoryName: string | null;
+  population: string | null;
+  publicUrl: string | null;
+  status: string;
+  isProfileComplete: boolean;
+  publishedAt: string | null;
+  unpublishedAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  fieldsValidation: BusinessFieldsValidationDto | null;
+}
+
+const emptyAddress = {
+  fullAddress: '', street: '', exteriorNumber: '', colony: '',
+  postalCode: '', city: '', state: '', lat: 0, lng: 0
+};
+
+const emptyHours = { allDay: true, weekdays: null, saturday: null, sunday: null };
 
 export const businessMapper = {
   toDomain(dto: BusinessSummaryDto): Business {
@@ -23,30 +58,45 @@ export const businessMapper = {
       contactEmail: '',
       contactPhone: '',
       categoryCode: 0,
-      category: '',
+      category: dto.categoryName ?? '',
+      population: dto.population ?? '',
       website: '',
       publicPhone: '',
       products: '',
       logoUrl: '',
-      address: {
-        fullAddress: '',
-        street: '',
-        exteriorNumber: '',
-        colony: '',
-        postalCode: '',
-        city: '',
-        state: '',
-        lat: 0,
-        lng: 0
-      },
-      hours: {
-        allDay: true,
-        weekdays: null,
-        saturday: null,
-        sunday: null
-      },
+      address: { ...emptyAddress },
+      hours: { ...emptyHours },
       createdAt: '',
       draft: null
+    };
+  },
+
+  detailToDomain(dto: BusinessDetailDto): Business {
+    return {
+      id: dto.portalBusinessId,
+      userId: '',
+      status: mapBusinessStatus(dto.status),
+      businessName: dto.businessName ?? '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      categoryCode: 0,
+      category: dto.categoryName ?? '',
+      population: dto.population ?? '',
+      website: '',
+      publicPhone: '',
+      products: '',
+      logoUrl: '',
+      address: { ...emptyAddress },
+      hours: { ...emptyHours },
+      createdAt: dto.createdAt ?? '',
+      draft: null,
+      publicUrl: dto.publicUrl ?? '',
+      isProfileComplete: dto.isProfileComplete,
+      publishedAt: dto.publishedAt,
+      unpublishedAt: dto.unpublishedAt,
+      updatedAt: dto.updatedAt,
+      fieldsValidation: mapFieldsValidation(dto.fieldsValidation)
     };
   },
 
@@ -54,6 +104,11 @@ export const businessMapper = {
     return business;
   }
 };
+
+function mapFieldsValidation(dto: BusinessFieldsValidationDto | null): BusinessFieldsValidation | null {
+  if (!dto) return null;
+  return { completo: dto.completo, campos: dto.campos ?? [] };
+}
 
 function mapBusinessStatus(status: string): BusinessStatus {
   const normalized = normalizeStatus(status);

@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Business } from '../../domain/business/business.entity';
 import { BusinessRepository, CreateBusinessData } from './business.repository';
-import { BusinessesResponseDto, businessMapper } from './business.mapper';
+import { BusinessDetailDto, BusinessesResponseDto, businessMapper } from './business.mapper';
 
 @Injectable({ providedIn: 'root' })
 export class BusinessHttpRepository implements BusinessRepository {
@@ -19,6 +19,14 @@ export class BusinessHttpRepository implements BusinessRepository {
         headers: this.buildHeaders()
       })
       .pipe(map(response => this.toBusinesses(response).map(businessMapper.toDomain)));
+  }
+
+  getById(id: string): Observable<Business> {
+    return this.http
+      .get<BusinessDetailDto>(`${this.businessesUrl}/${id}`, {
+        headers: this.buildHeaders()
+      })
+      .pipe(map(dto => businessMapper.detailToDomain(dto)));
   }
 
   create(_data: CreateBusinessData): Observable<Business> {

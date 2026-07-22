@@ -218,6 +218,27 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     if (this.mode === 'edit') {
       this.setBcmIframeUrl(this.bcmEditFallbackUrl);
     }
+
+    if (this.mode === 'detail' && this.business) {
+      this.loadBusinessDetail(this.business.id);
+    }
+  }
+
+  private loadBusinessDetail(id: string): void {
+    this.businessService.loadDetail(id).pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: b => {
+        if (this.internalMode !== 'detail' || this.business?.id !== id) return;
+        this.business = b;
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        console.error('[Business] No se pudo cargar el detalle del negocio.', err);
+        this.showToast('No se pudo cargar el detalle del negocio.', 'error');
+      }
+    });
   }
 
   private loadBcmIframeForAdd(): void {
@@ -467,7 +488,15 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     this.confirmMessage = 'Este negocio dejará de estar visible públicamente y liberará un espacio de publicación gratuita. ¿Deseas continuar?';
   }
 
+  get canPublish(): boolean {
+    return !!this.business?.fieldsValidation?.completo;
+  }
+
   requestPublish(): void {
+    if (!this.canPublish) {
+      this.showToast('Completa la información requerida del negocio antes de publicarlo.', 'error');
+      return;
+    }
     if (!this.businessService.hasPublishSlot()) {
       this.showToast('No es posible publicar porque ya tienes 3 negocios publicados. Cambia uno a No publicado primero.', 'error');
       return;

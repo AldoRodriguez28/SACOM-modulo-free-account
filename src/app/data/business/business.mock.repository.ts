@@ -12,6 +12,14 @@ export class BusinessMockRepository implements BusinessRepository {
     return of(this.load());
   }
 
+  getById(id: string): Observable<Business> {
+    const found = this.load().find(b => b.id === id);
+    if (!found) {
+      return throwError(() => new Error(`Business not found: ${id}`));
+    }
+    return of(found);
+  }
+
   create(data: CreateBusinessData): Observable<Business> {
     const newBiz: Business = {
       ...data,

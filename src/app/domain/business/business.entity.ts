@@ -16,6 +16,9 @@ export interface BusinessHoursSchedule {
 
 export type BusinessDraft = Omit<Business, 'id' | 'userId' | 'status' | 'draft' | 'createdAt'>;
 
+export interface BusinessFieldItem { campo: string; completo: boolean; valor: string | null; }
+export interface BusinessFieldsValidation { completo: boolean; campos: BusinessFieldItem[]; }
+
 export interface Business {
   id: string; userId: string; status: BusinessStatus;
   businessName: string; contactName: string; contactEmail: string; contactPhone: string;
@@ -23,4 +26,12 @@ export interface Business {
   products: string; logoUrl: string;
   address: BusinessAddress; hours: BusinessHoursSchedule; createdAt: string;
   draft?: BusinessDraft | null;
+  /** Campos devueltos por la API real (GET /businesses y GET /businesses/{id}); ausentes en negocios solo-mock. */
+  population?: string;
+  publicUrl?: string;
+  isProfileComplete?: boolean;
+  publishedAt?: string | null;
+  unpublishedAt?: string | null;
+  updatedAt?: string | null;
+  fieldsValidation?: BusinessFieldsValidation | null;
 }

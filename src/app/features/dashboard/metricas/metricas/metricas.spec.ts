@@ -18,6 +18,7 @@ const STUB_BIZ: Business = {
 
 const mockRepo = {
   getAll: () => of([STUB_BIZ]),
+  getById: (_id: string) => of(STUB_BIZ),
   create: (_: any) => of({} as any),
   update: (_id: string, data: any) => of(data as any),
   remove: (_: string) => of(undefined as void),

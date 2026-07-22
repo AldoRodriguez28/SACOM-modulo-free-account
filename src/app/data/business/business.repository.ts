@@ -6,6 +6,7 @@ export type CreateBusinessData = Omit<Business, 'id' | 'userId' | 'status' | 'cr
 
 export interface BusinessRepository {
   getAll(): Observable<Business[]>;
+  getById(id: string): Observable<Business>;
   create(data: CreateBusinessData): Observable<Business>;
   update(id: string, data: Partial<Business>): Observable<Business>;
   remove(id: string): Observable<void>;

@@ -40,6 +40,11 @@ export class BusinessStore {
     return this._businesses().find(b => b.id === id);
   }
 
+  /** Trae el detalle completo desde la API (campos dinámicos + fieldsValidation) y refresca el signal. */
+  loadDetail(id: string): Observable<Business> {
+    return this.repo.getById(id).pipe(tap(b => this.replace(b)));
+  }
+
   addBusiness(data: CreateBusinessData): Observable<Business> {
     return this.repo.create(data).pipe(
       tap(b => this._businesses.set([...this._businesses(), b]))

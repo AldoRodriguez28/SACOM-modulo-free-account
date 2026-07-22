@@ -27,7 +27,7 @@
       </div>
       <div class="biz-list-card__info">
         <div class="biz-list-card__name">{{ biz.businessName }}</div>
-        <div class="biz-list-card__cat">{{ biz.category }}{{ biz.address.colony ? ' · ' + biz.address.colony : '' }}</div>
+        <div class="biz-list-card__cat">{{ biz.category || 'N/A' }} · {{ biz.population || 'N/A' }}</div>
       </div>
       <span class="biz-list-card__status" [ngClass]="statusClass(biz.status)">
         {{ statusLabel(biz.status) }}

@@ -8,6 +8,7 @@ import { BusinessDrawer } from './business-drawer';
 
 const mockRepo = {
   getAll: () => of([]),
+  getById: (_id: string) => of({} as any),
   create: (_: any) => of({} as any),
   update: (_id: string, data: any) => of(data as any),
   remove: (_: string) => of(undefined as void),
