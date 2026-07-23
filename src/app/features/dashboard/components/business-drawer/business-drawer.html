@@ -29,7 +29,8 @@
       <!-- Hero -->
       <div class="drawer-biz-hero">
         <div class="drawer-biz-icon">
-          <ng-icon name="heroBuildingStorefront" size="26"></ng-icon>
+          <img *ngIf="businessLogoUrl as logo" [src]="logo" [alt]="business.businessName" class="drawer-biz-icon__img">
+          <ng-icon *ngIf="!businessLogoUrl" name="heroBuildingStorefront" size="26"></ng-icon>
         </div>
         <div class="drawer-biz-hero__info">
           <div class="drawer-biz-name">{{ business.businessName || 'N/A' }}</div>
@@ -100,7 +101,7 @@
       <div class="drawer-form-section" *ngIf="business.fieldsValidation?.campos?.length">Campos requeridos para publicar</div>
       <div class="drawer-fields-list" *ngIf="business.fieldsValidation?.campos?.length">
         <div class="drawer-field-row" *ngFor="let f of business.fieldsValidation!.campos">
-          <div class="drawer-field-row__name">{{ f.campo }}</div>
+          <div class="drawer-field-row__name">{{ cleanFieldLabel(f.campo) }}</div>
           <span
             class="drawer-field-row__badge drawer-tooltip"
             [ngClass]="f.valor ? 'drawer-field-row__badge--ok drawer-tooltip--ok' : 'drawer-field-row__badge--missing drawer-tooltip--missing'"

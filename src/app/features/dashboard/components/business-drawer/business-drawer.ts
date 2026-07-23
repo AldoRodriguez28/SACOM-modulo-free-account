@@ -691,6 +691,18 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     this.confirmMessage = 'Este negocio dejará de estar visible públicamente y liberará un espacio de publicación gratuita. ¿Deseas continuar?';
   }
 
+  /** Quita el sufijo técnico entre paréntesis que manda la API, ej. "Nombre completo (ContactName)" → "Nombre completo". */
+  cleanFieldLabel(campo: string): string {
+    return campo.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  }
+
+  /** El logo aún no viene como campo propio del detalle: se busca dentro de fieldsValidation.campos. */
+  get businessLogoUrl(): string | null {
+    const campos = this.business?.fieldsValidation?.campos ?? [];
+    const logoField = campos.find(c => this.cleanFieldLabel(c.campo).toLowerCase() === 'logo');
+    return logoField?.valor || null;
+  }
+
   get canPublish(): boolean {
     return !!this.business?.fieldsValidation?.completo;
   }
