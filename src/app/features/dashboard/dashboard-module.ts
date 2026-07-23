@@ -4,7 +4,6 @@ import { RouterModule } from '@angular/router';
 import { NgIconsModule } from '@ng-icons/core';
 import {
   heroChartBar,
-  heroLockClosed,
   heroCog6Tooth
 } from '@ng-icons/heroicons/outline';
 
@@ -19,7 +18,7 @@ import { NavLateral } from './components/nav-lateral/nav-lateral';
     CommonModule,
     RouterModule,
     DashboardRoutingModule,
-    NgIconsModule.withIcons({ heroChartBar, heroLockClosed, heroCog6Tooth })
+    NgIconsModule.withIcons({ heroChartBar, heroCog6Tooth })
   ]
 })
 export class DashboardModule { }

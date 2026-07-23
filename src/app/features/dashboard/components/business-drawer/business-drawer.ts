@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { take, timeout } from 'rxjs';
-import { Business, BusinessAddress, BusinessStatus } from '../../../../domain/business/business.entity';
+import { Business, BusinessAddress, BusinessFieldItem, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
 import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmEditEventPayload, BcmErrorPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
@@ -55,6 +55,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   bcmIframeRawUrl: string | null = null;
   bcmIframeLoading = false;
   bcmIframeError = '';
+  logoImageFailed = false;
 
   // Mapa
   mapCenter: google.maps.LatLngLiteral = { lat: 19.4195, lng: -99.1674 };
@@ -110,6 +111,47 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     return this.currentStatus ? map[this.currentStatus] : '';
   }
 
+  get pendingRequiredFields(): BusinessFieldItem[] {
+    return this.business?.fieldsValidation?.campos.filter(field => field.requerido && !field.completo) ?? [];
+  }
+
+  get capturedFields(): BusinessFieldItem[] {
+    return this.business?.fieldsValidation?.campos.filter(field =>
+      this.hasFieldValue(field) && !(field.requerido && !field.completo)
+    ) ?? [];
+  }
+
+  get businessLogoUrl(): string {
+    if (this.logoImageFailed) return '';
+
+    const directLogo = this.business?.logoUrl?.trim();
+    if (directLogo) return directLogo;
+
+    return this.business?.fieldsValidation?.campos
+      .find(field => this.isLogoField(field) && this.hasFieldValue(field))
+      ?.valor?.trim() ?? '';
+  }
+
+  hasFieldValue(field: BusinessFieldItem): boolean {
+    return !!field.valor?.trim();
+  }
+
+  isLogoField(field: BusinessFieldItem): boolean {
+    return this.normalizeFieldName(field.campo) === 'logo';
+  }
+
+  fieldDisplayValue(field: BusinessFieldItem): string {
+    return this.isLogoField(field) ? 'Imagen cargada' : field.valor?.trim() ?? '';
+  }
+
+  onBusinessLogoError(): void {
+    this.logoImageFailed = true;
+  }
+
+  private normalizeFieldName(value: string): string {
+    return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   constructor(
     private fb: FormBuilder,
     private businessService: BusinessStore,
@@ -136,6 +178,9 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     const editEventPayload = this.extractBcmEditEventPayload(data);
     if (editEventPayload) {
       this.reportBcmEditEvent(event.origin, editEventPayload);
+      if (editEventPayload.type === 'bcm:business-updated') {
+        this.returnToDetailAfterBcmUpdate();
+      }
       return;
     }
 
@@ -229,6 +274,27 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
         error: err => console.error('[BCM] Error al registrar evento de edición:', err)
       });
     });
+  }
+
+  private returnToDetailAfterBcmUpdate(): void {
+    const portalBusinessId = this.business?.id;
+    if (!portalBusinessId) {
+      return;
+    }
+
+    // Conserva abierto el drawer, desmonta el iframe e invalida respuestas pendientes.
+    this.internalMode = 'detail';
+    this.bcmRequestId++;
+    this.bcmIframeUrl = null;
+    this.bcmIframeRawUrl = null;
+    this.bcmIframeError = '';
+    this.bcmIframeLoading = false;
+    this.logoImageFailed = false;
+    this.confirmAction = null;
+    this.cdr.markForCheck();
+
+    // Recarga mediante HttpClient/Observable; no refresca la página completa.
+    this.loadBusinessDetail(portalBusinessId);
   }
 
  private extractBcmErrorPayload(data: unknown): BcmErrorPayload | undefined {
@@ -334,6 +400,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     this.bcmIframeRawUrl = null;
     this.bcmIframeError = '';
     this.bcmIframeLoading = false;
+    this.logoImageFailed = false;
     this.bcmRequestId++;
     this.cdr.markForCheck();
 
@@ -694,13 +761,6 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   /** Quita el sufijo técnico entre paréntesis que manda la API, ej. "Nombre completo (ContactName)" → "Nombre completo". */
   cleanFieldLabel(campo: string): string {
     return campo.replace(/\s*\([^)]*\)\s*$/, '').trim();
-  }
-
-  /** El logo aún no viene como campo propio del detalle: se busca dentro de fieldsValidation.campos. */
-  get businessLogoUrl(): string | null {
-    const campos = this.business?.fieldsValidation?.campos ?? [];
-    const logoField = campos.find(c => this.cleanFieldLabel(c.campo).toLowerCase() === 'logo');
-    return logoField?.valor || null;
   }
 
   get canPublish(): boolean {
