@@ -118,6 +118,53 @@ describe('BusinessDrawer', () => {
     }));
   });
 
+  it('regresa al detalle y recarga el negocio después de una edición exitosa', () => {
+    const business = fixtureBiz();
+    const refreshedBusiness = { ...business, businessName: 'Tortilería Doña Luz Puebla' };
+    const bcmService = (component as any).bcmEmbedService;
+    const businessService = (component as any).businessService;
+    spyOn(bcmService, 'registerBcmEvent').and.returnValue(of(void 0));
+    const loadDetail = spyOn(businessService, 'loadDetail').and.returnValue(of(refreshedBusiness));
+    component.business = business;
+    component.internalMode = 'edit';
+
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: {
+        type: 'bcm:business-updated',
+        businessId: 12600329,
+        versionNumber: 1,
+        commercialName: 'Tortilería Doña Luz Puebla',
+        timestamp: '2026-07-22T00:28:29.524Z'
+      }
+    }));
+
+    expect(component.internalMode).toBe('detail');
+    expect(loadDetail).toHaveBeenCalledOnceWith(business.id);
+    expect(component.business).toBe(refreshedBusiness);
+    expect(component.bcmIframeUrl).toBeNull();
+  });
+
+  it('separa pendientes requeridos, omite opcionales vacíos y usa el logo capturado', () => {
+    component.business = {
+      ...fixtureBiz(),
+      fieldsValidation: {
+        completo: false,
+        campos: [
+          { campo: 'Nombre comercial', requerido: true, completo: false, valor: null },
+          { campo: 'Sitio web', requerido: false, completo: false, valor: '   ' },
+          { campo: 'Correo', requerido: true, completo: true, valor: 'correo@ejemplo.com' },
+          { campo: 'Logo', requerido: false, completo: true, valor: 'https://example.com/logo.png' }
+        ]
+      }
+    };
+
+    expect(component.pendingRequiredFields.map(field => field.campo)).toEqual(['Nombre comercial']);
+    expect(component.capturedFields.map(field => field.campo)).toEqual(['Correo', 'Logo']);
+    expect(component.businessLogoUrl).toBe('https://example.com/logo.png');
+    expect(component.fieldDisplayValue(component.capturedFields[1])).toBe('Imagen cargada');
+  });
+
   it('ngOnChanges in add mode produces a blank form', () => {
     component.mode = 'add';
     component.business = null;

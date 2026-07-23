@@ -21,23 +21,12 @@ describe('MetricsMockService', () => {
     });
   });
 
-  it('getMetrics() with multiple ids aggregates clicks and impressions', (done) => {
-    service.getMetrics(['biz-001']).subscribe(single => {
-      service.getMetrics(['biz-001', 'biz-002']).subscribe(multi => {
-        const singleTotal = single.last30Days.reduce((s, d) => s + d.clicks, 0);
-        const multiTotal = multi.last30Days.reduce((s, d) => s + d.clicks, 0);
-        expect(multiTotal).toBeGreaterThan(singleTotal);
-        done();
-      });
-    });
-  });
-
-  it('each data point has valid date, clicks > 0, impressions > 0', (done) => {
+  it('returns zero metrics while the metrics integration is pending', (done) => {
     service.getMetrics(['biz-001']).subscribe(m => {
       m.last30Days.forEach(p => {
         expect(p.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        expect(p.clicks).toBeGreaterThan(0);
-        expect(p.impressions).toBeGreaterThan(0);
+        expect(p.clicks).toBe(0);
+        expect(p.impressions).toBe(0);
       });
       done();
     });
