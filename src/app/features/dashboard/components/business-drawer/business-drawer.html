@@ -28,8 +28,15 @@
     <div class="drawer-body">
       <!-- Hero -->
       <div class="drawer-biz-hero">
-        <div class="drawer-biz-icon">
-          <ng-icon name="heroBuildingStorefront" size="26"></ng-icon>
+        <div class="drawer-biz-icon" [class.drawer-biz-icon--image]="businessLogoUrl">
+          <img
+            *ngIf="businessLogoUrl; else defaultBusinessIcon"
+            [src]="businessLogoUrl"
+            [alt]="'Logo de ' + (business.businessName || 'negocio')"
+            (error)="onBusinessLogoError()">
+          <ng-template #defaultBusinessIcon>
+            <ng-icon name="heroBuildingStorefront" size="26"></ng-icon>
+          </ng-template>
         </div>
         <div class="drawer-biz-hero__info">
           <div class="drawer-biz-name">{{ business.businessName || 'N/A' }}</div>
@@ -44,6 +51,46 @@
         Tienes cambios guardados sin publicar. Edita y selecciona <strong>Finalizar</strong> para publicarlos.
       </div>
 
+      <section class="drawer-required" *ngIf="pendingRequiredFields.length" aria-labelledby="required-fields-title">
+        <div class="drawer-required__header">
+          <ng-icon name="heroExclamationTriangle" size="17" aria-hidden="true"></ng-icon>
+          <div>
+            <div id="required-fields-title" class="drawer-required__title">
+              Información pendiente ({{ pendingRequiredFields.length }})
+            </div>
+            <div class="drawer-required__description">Completa estos campos para poder publicar.</div>
+          </div>
+        </div>
+        <div class="drawer-required__list">
+          <div class="drawer-required__row" *ngFor="let field of pendingRequiredFields">
+            <div class="drawer-required__name">{{ field.campo }}</div>
+            <div class="drawer-required__status">
+              {{ hasFieldValue(field) ? 'Requiere revisión' : 'Falta información' }}
+            </div>
+            <div class="drawer-required__current" *ngIf="hasFieldValue(field)">{{ field.valor }}</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Acceso a la publicación en Sección Amarilla -->
+      <div class="drawer-portal-link" *ngIf="business.status === 'published' && business.urlPortal">
+        <div class="drawer-portal-link__content">
+          <div class="drawer-portal-link__title">Consulta tu negocio en Sección Amarilla</div>
+          <div class="drawer-portal-link__description">
+            Abre la ficha para revisar cómo la ven tus clientes.
+          </div>
+        </div>
+        <a
+          [href]="business.urlPortal"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="drawer-portal-link__cta"
+          aria-label="Ver publicación del negocio en Sección Amarilla (abre en una pestaña nueva)">
+          <ng-icon name="heroEye" size="17" aria-hidden="true"></ng-icon>
+          <span>Ver publicación</span>
+        </a>
+      </div>
+
       <!-- KPIs (solo para publicados) -->
       <div class="drawer-kpis" *ngIf="business.status === 'published'">
         <div class="drawer-kpi"><div class="drawer-kpi__value">{{ totalClicks | number }}</div><div class="drawer-kpi__label">Clics</div></div>
@@ -51,22 +98,23 @@
         <div class="drawer-kpi"><div class="drawer-kpi__value">{{ ctr }}</div><div class="drawer-kpi__label">CTR</div></div>
       </div>
 
-      <!-- Info básica (campos dinámicos según lo que devuelva la API) -->
-      <div class="drawer-info-grid">
-        <div class="drawer-info-item">
-          <div class="drawer-info-label">Categoría</div>
-          <div class="drawer-info-value">{{ business.category || 'N/A' }}</div>
+      <section class="drawer-captured" *ngIf="capturedFields.length" aria-labelledby="captured-fields-title">
+        <div id="captured-fields-title" class="drawer-form-section">
+          Información capturada ({{ capturedFields.length }})
         </div>
-        <div class="drawer-info-item">
-          <div class="drawer-info-label">Población</div>
-          <div class="drawer-info-value">{{ business.population || 'N/A' }}</div>
-        </div>
-        <div class="drawer-info-item" *ngIf="business.status === 'published' && business.publicUrl">
-          <div class="drawer-info-label">URL pública</div>
-          <div class="drawer-info-value">
-            <a [href]="business.publicUrl" target="_blank" rel="noopener noreferrer">{{ business.publicUrl }}</a>
+        <div class="drawer-fields-list">
+          <div class="drawer-field-row" *ngFor="let field of capturedFields">
+            <div class="drawer-field-row__name">{{ field.campo }}</div>
+            <div class="drawer-field-row__value" [title]="fieldDisplayValue(field)">
+              <ng-icon *ngIf="isLogoField(field)" name="heroCheckCircle" size="14" aria-hidden="true"></ng-icon>
+              <span>{{ fieldDisplayValue(field) }}</span>
+            </div>
           </div>
         </div>
+      </section>
+
+      <div class="drawer-info-grid drawer-info-grid--metadata"
+           *ngIf="business.publishedAt || business.unpublishedAt || business.updatedAt">
         <div class="drawer-info-item" *ngIf="business.publishedAt">
           <div class="drawer-info-label">Publicado el</div>
           <div class="drawer-info-value">{{ business.publishedAt | date:'dd/MM/yyyy HH:mm' }}</div>
@@ -81,34 +129,6 @@
         </div>
       </div>
 
-      <!-- URL del portal -->
-      <div class="drawer-portal-link" *ngIf="business.urlPortal">
-        <div class="drawer-portal-link__icon">
-          <ng-icon name="heroEye" size="16"></ng-icon>
-        </div>
-        <div class="drawer-portal-link__info">
-          <div class="drawer-info-label">URL del portal</div>
-          <a [href]="business.urlPortal" target="_blank" rel="noopener noreferrer"
-             class="drawer-portal-link__value drawer-tooltip drawer-tooltip--portal"
-             [attr.data-tooltip]="business.urlPortal">
-            <span class="drawer-portal-link__value-text">{{ business.urlPortal }}</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Campos requeridos para publicar -->
-      <div class="drawer-form-section" *ngIf="business.fieldsValidation?.campos?.length">Campos requeridos para publicar</div>
-      <div class="drawer-fields-list" *ngIf="business.fieldsValidation?.campos?.length">
-        <div class="drawer-field-row" *ngFor="let f of business.fieldsValidation!.campos">
-          <div class="drawer-field-row__name">{{ f.campo }}</div>
-          <span
-            class="drawer-field-row__badge drawer-tooltip"
-            [ngClass]="f.valor ? 'drawer-field-row__badge--ok drawer-tooltip--ok' : 'drawer-field-row__badge--missing drawer-tooltip--missing'"
-            [attr.data-tooltip]="f.valor || 'Sin información'">
-            <span class="drawer-field-row__badge-text">{{ f.valor || 'Sin información' }}</span>
-          </span>
-        </div>
-      </div>
     </div>
 
     <!-- Footer condicional por estado -->
