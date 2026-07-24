@@ -112,12 +112,16 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   }
 
   get pendingRequiredFields(): BusinessFieldItem[] {
-    return this.business?.fieldsValidation?.campos.filter(field => field.requerido && !field.completo) ?? [];
+    return this.business?.fieldsValidation?.campos.filter(field =>
+      field.mostrar !== false && field.requerido && !field.completo
+    ) ?? [];
   }
 
   get capturedFields(): BusinessFieldItem[] {
     return this.business?.fieldsValidation?.campos.filter(field =>
-      this.hasFieldValue(field) && !(field.requerido && !field.completo)
+      field.mostrar !== false &&
+      this.hasFieldValue(field) &&
+      !(field.requerido && !field.completo)
     ) ?? [];
   }
 
@@ -128,7 +132,11 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     if (directLogo) return directLogo;
 
     return this.business?.fieldsValidation?.campos
-      .find(field => this.isLogoField(field) && this.hasFieldValue(field))
+      .find(field =>
+        field.mostrar !== false &&
+        this.isLogoField(field) &&
+        this.hasFieldValue(field)
+      )
       ?.valor?.trim() ?? '';
   }
 

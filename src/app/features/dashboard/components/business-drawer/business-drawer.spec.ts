@@ -165,6 +165,33 @@ describe('BusinessDrawer', () => {
     expect(component.fieldDisplayValue(component.capturedFields[1])).toBe('Imagen cargada');
   });
 
+  it('no muestra campos técnicos aunque participen en la validación', () => {
+    component.business = {
+      ...fixtureBiz(),
+      fieldsValidation: {
+        completo: true,
+        campos: [
+          {
+            campo: 'ID de categoría',
+            requerido: true,
+            completo: true,
+            valor: '2211603',
+            mostrar: false
+          },
+          {
+            campo: 'Giro del negocio',
+            requerido: true,
+            completo: true,
+            valor: 'Taquerías y Torterías',
+            mostrar: true
+          }
+        ]
+      }
+    };
+
+    expect(component.capturedFields.map(field => field.campo)).toEqual(['Giro del negocio']);
+  });
+
   it('ngOnChanges in add mode produces a blank form', () => {
     component.mode = 'add';
     component.business = null;
