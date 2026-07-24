@@ -6,7 +6,7 @@ import { take, timeout } from 'rxjs';
 import { Business, BusinessAddress, BusinessFieldItem, BusinessStatus } from '../../../../domain/business/business.entity';
 import { BusinessStore, StatusTransitionResult } from '../../business/business.store';
 import { Metrics } from '../../../../core/models/metrics.model';
-import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmEditEventPayload, BcmErrorPayload, RegisterBusinessRequest } from '../../../../core/services/bcm-embed.service';
+import { BcmEmbedService, BcmBusinessRegisteredPayload, BcmEditEventPayload, BcmErrorPayload, RegisterBusinessRequest, RegisterBusinessResponse } from '../../../../core/services/bcm-embed.service';
 import { environment } from '../../../../../environments/environment';
 
 export type DrawerMode = 'detail' | 'edit' | 'add';
@@ -26,6 +26,9 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly bcmEmbedService = inject(BcmEmbedService);
   private bcmMessageHandler: ((event: MessageEvent) => void) | null = null;
+  private registeredPortalBusinessId: string | null = null;
+  private registeredBcmBusinessId: number | null = null;
+  private pendingBcmUpdate = false;
 
   @Input() mode: DrawerMode = 'detail';
   @Input() business: Business | null = null;
@@ -34,7 +37,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
   @Output() saved    = new EventEmitter<Business>();
   @Output() deleted  = new EventEmitter<string>();
   @Output() statusChanged = new EventEmitter<Business>();
-  @Output() bcmBusinessRegistered = new EventEmitter<Business>();
+  @Output() bcmBusinessRegistered = new EventEmitter<RegisterBusinessResponse>();
 
   internalMode: DrawerMode = 'detail';
   form!: FormGroup;
@@ -187,7 +190,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     if (editEventPayload) {
       this.reportBcmEditEvent(event.origin, editEventPayload);
       if (editEventPayload.type === 'bcm:business-updated') {
-        this.returnToDetailAfterBcmUpdate();
+        this.returnToDetailAfterBcmUpdate(editEventPayload.businessId);
       }
       return;
     }
@@ -207,6 +210,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     if (!payload) return;
 
     console.log('[BCM] PostMessage recibido:', payload);
+    this.registeredBcmBusinessId = payload.businessId;
 
     const request: RegisterBusinessRequest = {
       businessName: payload.commercialName,
@@ -224,8 +228,12 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
       ).subscribe({
         next: (response) => {
           console.log('[BCM] Negocio registrado en backend:', response);
+          this.registeredPortalBusinessId = response.portalBusinessId;
           this.cdr.markForCheck();
-          this.bcmBusinessRegistered.emit(response as unknown as Business);
+          this.bcmBusinessRegistered.emit(response);
+          if (this.pendingBcmUpdate) {
+            this.returnToDetailAfterBcmUpdate(payload.businessId);
+          }
         },
         error: (err) => {
           console.error('[BCM] Error al registrar negocio en backend:', err);
@@ -284,12 +292,21 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  private returnToDetailAfterBcmUpdate(): void {
-    const portalBusinessId = this.business?.id;
-    if (!portalBusinessId) {
+  private returnToDetailAfterBcmUpdate(bcmBusinessId?: number): void {
+    if (this.internalMode === 'add'
+      && this.registeredBcmBusinessId !== null
+      && bcmBusinessId !== undefined
+      && bcmBusinessId !== this.registeredBcmBusinessId) {
       return;
     }
 
+    const portalBusinessId = this.business?.id ?? this.registeredPortalBusinessId;
+    if (!portalBusinessId) {
+      this.pendingBcmUpdate = true;
+      return;
+    }
+
+    this.pendingBcmUpdate = false;
     // Conserva abierto el drawer, desmonta el iframe e invalida respuestas pendientes.
     this.internalMode = 'detail';
     this.bcmRequestId++;
@@ -409,6 +426,9 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
     this.bcmIframeError = '';
     this.bcmIframeLoading = false;
     this.logoImageFailed = false;
+    this.registeredPortalBusinessId = null;
+    this.registeredBcmBusinessId = null;
+    this.pendingBcmUpdate = false;
     this.bcmRequestId++;
     this.cdr.markForCheck();
 
@@ -445,7 +465,7 @@ export class BusinessDrawer implements OnChanges, OnInit, OnDestroy {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: b => {
-        if (this.internalMode !== 'detail' || this.business?.id !== id) return;
+        if (this.internalMode !== 'detail' || (this.business && this.business.id !== id)) return;
         this.business = b;
         this.cdr.markForCheck();
       },

@@ -81,6 +81,12 @@ export interface RegisterBusinessRequest {
   bcmBusinessVersionNumber: number;
 }
 
+export interface RegisterBusinessResponse {
+  portalBusinessId: string;
+  businessName: string | null;
+  portalUserId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class BcmEmbedService {
   constructor(private http: HttpClient) {}
@@ -101,8 +107,8 @@ export class BcmEmbedService {
     );
   }
 
-  registerBusiness(data: RegisterBusinessRequest): Observable<unknown> {
-    return this.http.post(
+  registerBusiness(data: RegisterBusinessRequest): Observable<RegisterBusinessResponse> {
+    return this.http.post<RegisterBusinessResponse>(
       `${environment.API_URI}/Businesses`,
       data,
       { headers: this.buildHeaders() }
