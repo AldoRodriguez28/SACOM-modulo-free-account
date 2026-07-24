@@ -19,6 +19,7 @@ export interface BusinessFieldItemDto {
   requerido: boolean;
   completo: boolean;
   valor: string | null;
+  mostrar?: boolean;
 }
 
 export interface BusinessFieldsValidationDto {
@@ -113,7 +114,11 @@ function mapFieldsValidation(dto: BusinessFieldsValidationDto | null): BusinessF
   return {
     completo: dto.completo,
     campos: (dto.campos ?? []).map(c => ({
-      campo: c.campo, requerido: c.requerido, completo: c.completo, valor: c.valor
+      campo: c.campo,
+      requerido: c.requerido,
+      completo: c.completo,
+      valor: c.valor,
+      mostrar: c.mostrar ?? true
     }))
   };
 }

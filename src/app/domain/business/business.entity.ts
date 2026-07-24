@@ -16,7 +16,13 @@ export interface BusinessHoursSchedule {
 
 export type BusinessDraft = Omit<Business, 'id' | 'userId' | 'status' | 'draft' | 'createdAt'>;
 
-export interface BusinessFieldItem { campo: string; requerido: boolean; completo: boolean; valor: string | null; }
+export interface BusinessFieldItem {
+  campo: string;
+  requerido: boolean;
+  completo: boolean;
+  valor: string | null;
+  mostrar?: boolean;
+}
 export interface BusinessFieldsValidation { completo: boolean; campos: BusinessFieldItem[]; }
 
 export interface Business {
