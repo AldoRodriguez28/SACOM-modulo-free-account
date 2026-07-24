@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GoogleMapsModule } from '@angular/google-maps';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { BUSINESS_REPOSITORY } from '../../../../data/business/business.repository';
 import { BusinessDrawer } from './business-drawer';
 
@@ -143,6 +143,102 @@ describe('BusinessDrawer', () => {
     expect(loadDetail).toHaveBeenCalledOnceWith(business.id);
     expect(component.business).toBe(refreshedBusiness);
     expect(component.bcmIframeUrl).toBeNull();
+  });
+
+  it('después del alta regresa al detalle cuando BCM confirma la actualización', () => {
+    const portalBusinessId = 'portal-business-1';
+    const bcmBusinessId = 12600362;
+    const refreshedBusiness = { ...fixtureBiz(), id: portalBusinessId, businessName: 'Joyería ABC' };
+    const bcmService = (component as any).bcmEmbedService;
+    const businessService = (component as any).businessService;
+    spyOn(bcmService, 'registerBusiness').and.returnValue(of({
+      portalBusinessId,
+      businessName: 'Joyería ABC',
+      portalUserId: 'portal-user-1'
+    }));
+    spyOn(bcmService, 'registerBcmEvent').and.returnValue(of(void 0));
+    const loadDetail = spyOn(businessService, 'loadDetail').and.returnValue(of(refreshedBusiness));
+    component.business = null;
+    component.internalMode = 'add';
+
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: {
+        type: 'bcm:business-registered',
+        businessId: bcmBusinessId,
+        versionNumber: 1,
+        commercialName: 'Joyería ABC',
+        categoryCode: '2211603',
+        categoryName: 'Joyerías',
+        townCode: '1',
+        townName: 'Ciudad de México',
+        timestamp: '2026-07-24T12:00:00.000Z'
+      }
+    }));
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://bcm-test.seccionamarilla.com',
+      data: {
+        type: 'bcm:business-updated',
+        businessId: bcmBusinessId,
+        versionNumber: 1,
+        commercialName: 'Joyería ABC',
+        timestamp: '2026-07-24T12:01:00.000Z'
+      }
+    }));
+
+    expect(component.internalMode).toBe('detail');
+    expect(loadDetail).toHaveBeenCalledOnceWith(portalBusinessId);
+    expect(component.business).toBe(refreshedBusiness);
+  });
+
+  it('espera a que termine el registro si BCM confirma la actualización primero', () => {
+    const portalBusinessId = 'portal-business-2';
+    const bcmBusinessId = 12600363;
+    const registration = new Subject<{
+      portalBusinessId: string;
+      businessName: string;
+      portalUserId: string;
+    }>();
+    const refreshedBusiness = { ...fixtureBiz(), id: portalBusinessId };
+    const bcmService = (component as any).bcmEmbedService;
+    const businessService = (component as any).businessService;
+    spyOn(bcmService, 'registerBusiness').and.returnValue(registration);
+    spyOn(bcmService, 'registerBcmEvent').and.returnValue(of(void 0));
+    const loadDetail = spyOn(businessService, 'loadDetail').and.returnValue(of(refreshedBusiness));
+    component.business = null;
+    component.internalMode = 'add';
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: {
+        type: 'bcm:business-registered',
+        businessId: bcmBusinessId,
+        versionNumber: 1,
+        commercialName: 'Negocio nuevo',
+        categoryCode: '2211603',
+        townCode: '1',
+        timestamp: '2026-07-24T12:00:00.000Z'
+      }
+    }));
+    window.dispatchEvent(new MessageEvent('message', {
+      data: {
+        type: 'bcm:business-updated',
+        businessId: bcmBusinessId,
+        versionNumber: 1,
+        commercialName: 'Negocio nuevo',
+        timestamp: '2026-07-24T12:00:01.000Z'
+      }
+    }));
+
+    expect(loadDetail).not.toHaveBeenCalled();
+
+    registration.next({
+      portalBusinessId,
+      businessName: 'Negocio nuevo',
+      portalUserId: 'portal-user-1'
+    });
+
+    expect(component.internalMode).toBe('detail');
+    expect(loadDetail).toHaveBeenCalledOnceWith(portalBusinessId);
   });
 
   it('separa pendientes requeridos, omite opcionales vacíos y usa el logo capturado', () => {

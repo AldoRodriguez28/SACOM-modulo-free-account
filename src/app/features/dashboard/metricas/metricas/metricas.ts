@@ -4,6 +4,7 @@ import { BusinessStore } from '../../business/business.store';
 import { AuthMockService } from '../../../../core/services/auth.mock.service';
 import { DailyMetric, Metrics } from '../../../../core/models/metrics.model';
 import { Business } from '../../../../domain/business/business.entity';
+import { RegisterBusinessResponse } from '../../../../core/services/bcm-embed.service';
 
 @Component({
   selector: 'app-metricas',
@@ -92,7 +93,7 @@ export class Metricas implements OnInit {
     this.loadData();
   }
 
-  onBcmBusinessRegistered(_biz: Business): void {
+  onBcmBusinessRegistered(_result: RegisterBusinessResponse): void {
     this.businessService.reload();
   }
 
