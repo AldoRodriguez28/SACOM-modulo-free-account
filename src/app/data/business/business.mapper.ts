@@ -43,6 +43,18 @@ export interface BusinessDetailDto {
   urlPortal: string | null;
 }
 
+export interface PublishResponseDto {
+  portalBusinessId: string;
+  publicado: boolean;
+  adnAccountId: number;
+  adnProductId: number;
+}
+
+export interface UnpublishResponseDto {
+  portalBusinessId: string;
+  despublicado: boolean;
+}
+
 const emptyAddress = {
   fullAddress: '', street: '', exteriorNumber: '', colony: '',
   postalCode: '', city: '', state: '', lat: 0, lng: 0

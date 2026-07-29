@@ -73,4 +73,20 @@ describe('BusinessStore', () => {
     const res = await firstValueFrom(store.publish(u.id));
     expect(res.success).toBe(false);
   });
+
+  it('publish con slot marca el negocio como published en el signal', async () => {
+    const b = await addBiz();
+    const res = await firstValueFrom(store.publish(b.id));
+    expect(res.success).toBe(true);
+    expect(res.status).toBe('published');
+    expect(store.getBusinessById(b.id)?.status).toBe('published');
+  });
+
+  it('unpublish marca el negocio como unpublished en el signal', async () => {
+    const b = await addBiz();
+    await firstValueFrom(store.publish(b.id));
+    const res = await firstValueFrom(store.unpublish(b.id));
+    expect(res.status).toBe('unpublished');
+    expect(store.getBusinessById(b.id)?.status).toBe('unpublished');
+  });
 });

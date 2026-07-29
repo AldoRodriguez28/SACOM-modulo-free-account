@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, map, of, throwError } from 'rxjs';
 import { Business, BusinessStatus } from '../../domain/business/business.entity';
 import { BusinessRepository, CreateBusinessData } from './business.repository';
 import mockData from '../../../assets/mock-data.json';
@@ -42,6 +42,14 @@ export class BusinessMockRepository implements BusinessRepository {
     const list = current.map(b => (b.id === id ? { ...b, ...data } : b));
     this.persist(list);
     return of(list.find(b => b.id === id)!);
+  }
+
+  publish(id: string): Observable<BusinessStatus> {
+    return this.update(id, { status: 'published' }).pipe(map(b => b.status));
+  }
+
+  unpublish(id: string): Observable<BusinessStatus> {
+    return this.update(id, { status: 'unpublished', draft: null }).pipe(map(b => b.status));
   }
 
   remove(id: string): Observable<void> {
