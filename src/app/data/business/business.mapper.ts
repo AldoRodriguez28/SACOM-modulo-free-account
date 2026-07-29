@@ -12,6 +12,18 @@ export interface BusinessSummaryDto {
   status: string;
 }
 
+export interface PublishResponseDto {
+  portalBusinessId: string;
+  publicado: boolean;
+  adnAccountId: number;
+  adnProductId: number;
+}
+
+export interface UnpublishResponseDto {
+  portalBusinessId: string;
+  despublicado: boolean;
+}
+
 export const businessMapper = {
   toDomain(dto: BusinessSummaryDto): Business {
     return {

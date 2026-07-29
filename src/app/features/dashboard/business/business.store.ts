@@ -79,14 +79,14 @@ export class BusinessStore {
     if (!this.hasPublishSlot()) {
       return of({ success: false, message: 'No es posible publicar este negocio porque ya tienes 3 negocios publicados. Para publicar otro, cambia alguno de los publicados a No publicado.' });
     }
-    return this.repo.update(id, { status: 'published' }).pipe(
-      tap(b => this.replace(b)),
-      map(() => ({ success: true, status: 'published' as BusinessStatus, message: 'Tu negocio fue publicado correctamente.' }))
+    return this.repo.publish(id).pipe(
+      map(status => this.applyStatus(id, status)),
+      map(b => ({ success: true, status: b.status, message: 'Tu negocio fue publicado correctamente.' }))
     );
   }
 
   unpublish(id: string): Observable<Business> {
-    return this.repo.update(id, { status: 'unpublished', draft: null }).pipe(tap(b => this.replace(b)));
+    return this.repo.unpublish(id).pipe(map(status => this.applyStatus(id, status, true)));
   }
 
   softDelete(id: string): Observable<StatusTransitionResult> {
@@ -107,6 +107,15 @@ export class BusinessStore {
 
   private replace(b: Business): void {
     this._businesses.set(this._businesses().map(x => (x.id === b.id ? b : x)));
+  }
+
+  /** Refleja en memoria el nuevo status devuelto por la API (la respuesta no trae el negocio completo). */
+  private applyStatus(id: string, status: BusinessStatus, clearDraft = false): Business {
+    const current = this.getBusinessById(id);
+    if (!current) return { id, status } as Business;
+    const updated: Business = { ...current, status, draft: clearDraft ? null : current.draft };
+    this.replace(updated);
+    return updated;
   }
 
   private messageForFinalize(prev: BusinessStatus, target: BusinessStatus): StatusTransitionResult {

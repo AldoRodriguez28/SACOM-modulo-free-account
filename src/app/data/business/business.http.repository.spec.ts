@@ -75,4 +75,32 @@ describe('BusinessHttpRepository', () => {
     expect(req.request.headers.get('Authorization')).toBe('Bearer local-token');
     req.flush({ businesses: [], total: 0, published: 0 });
   });
+
+  it('publish hace POST a /{id}/publish con body vacio y mapea publicado a published', () => {
+    const id = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+    let status: string | undefined;
+    repo.publish(id).subscribe(s => (status = s));
+
+    const req = http.expectOne(`${BUSINESSES_URL}/${id}/publish`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+
+    req.flush({ portalBusinessId: id, publicado: true, adnAccountId: 0, adnProductId: 0 });
+    expect(status).toBe('published');
+  });
+
+  it('unpublish hace POST a /{id}/unpublish con body vacio y mapea despublicado a unpublished', () => {
+    const id = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+    let status: string | undefined;
+    repo.unpublish(id).subscribe(s => (status = s));
+
+    const req = http.expectOne(`${BUSINESSES_URL}/${id}/unpublish`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    expect(req.request.headers.get('Authorization')).toBe('Bearer test-token');
+
+    req.flush({ portalBusinessId: id, despublicado: true });
+    expect(status).toBe('unpublished');
+  });
 });

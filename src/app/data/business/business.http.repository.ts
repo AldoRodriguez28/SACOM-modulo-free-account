@@ -3,9 +3,11 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { Business } from '../../domain/business/business.entity';
+import { Business, BusinessStatus } from '../../domain/business/business.entity';
 import { BusinessRepository, CreateBusinessData } from './business.repository';
-import { BusinessesResponseDto, businessMapper } from './business.mapper';
+import {
+  BusinessesResponseDto, PublishResponseDto, UnpublishResponseDto, businessMapper
+} from './business.mapper';
 
 @Injectable({ providedIn: 'root' })
 export class BusinessHttpRepository implements BusinessRepository {
@@ -27,6 +29,22 @@ export class BusinessHttpRepository implements BusinessRepository {
 
   update(_id: string, _data: Partial<Business>): Observable<Business> {
     return this.notImplemented('update');
+  }
+
+  publish(id: string): Observable<BusinessStatus> {
+    return this.http
+      .post<PublishResponseDto>(`${this.businessesUrl}/${id}/publish`, {}, {
+        headers: this.buildHeaders()
+      })
+      .pipe(map(response => (response.publicado ? 'published' : 'unpublished')));
+  }
+
+  unpublish(id: string): Observable<BusinessStatus> {
+    return this.http
+      .post<UnpublishResponseDto>(`${this.businessesUrl}/${id}/unpublish`, {}, {
+        headers: this.buildHeaders()
+      })
+      .pipe(map(response => (response.despublicado ? 'unpublished' : 'published')));
   }
 
   remove(_id: string): Observable<void> {
